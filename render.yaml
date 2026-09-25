@@ -1,0 +1,70 @@
+# Blueprint de Render (Infrastructure as Code).
+# Render → New → Blueprint → seleccionar este repositorio. Crea los dos servicios y los conecta.
+services:
+  # ------------------------------------------------------------------ Backend (FastAPI)
+  - type: web
+    name: gd-rag-api
+    runtime: python
+    rootDir: backend
+    plan: free                      # cambiar a starter/standard para evitar el "sleep" del plan free
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: ENV_NAME
+        value: render
+      - key: JWT_SECRET
+        generateValue: true         # Render genera un secreto aleatorio
+      - key: JWT_EXPIRE_MINUTES
+        value: "480"
+      - key: FRONTEND_HOST          # habilita CORS para el portal
+        fromService:
+          type: web
+          name: gd-portal
+          property: host
+      - key: CORS_ORIGINS
+        value: http://localhost:5500
+      - key: EMBEDDINGS_PROVIDER
+        value: hashing
+      - key: VECTOR_STORE
+        value: memory
+      - key: LLM_PROVIDER
+        value: extractive
+      # Descomentar al habilitar el LLM institucional (valores secretos: sync false = se capturan en el dashboard)
+      # - key: LLM_API_KEY
+      #   sync: false
+      # - key: LLM_BASE_URL
+      #   sync: false
+
+  # ------------------------------------------------------------------ Frontend (HTML + Bootstrap)
+  - type: web
+    name: gd-portal
+    runtime: static
+    rootDir: frontend
+    buildCommand: sh scripts/render-build.sh
+    staticPublishPath: .
+    autoDeploy: true
+    envVars:
+      - key: API_HOST               # el build genera assets/js/env.js con https://<API_HOST>
+        fromService:
+          type: web
+          name: gd-rag-api
+          property: host
+      - key: USE_MOCK
+        value: "false"              # "true" para publicar el portal sin backend (solo look and feel)
+      - key: ENV_NAME
+        value: render
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /assets/js/env.js
+        name: Cache-Control
+        value: no-cache

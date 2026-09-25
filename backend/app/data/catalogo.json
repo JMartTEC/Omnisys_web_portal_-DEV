@@ -1,0 +1,1114 @@
+{
+  "_nota": "Contenido de ejemplo. 'gobiernos' alimenta las secciones del portal; 'conocimiento' es la semilla que se vectoriza para los agentes (no se expone como ficha). El frontend (modo MOCK) se genera con frontend/scripts/sync-mock-data.sh",
+  "gobiernos": [
+    {
+      "id": "datos",
+      "nombre": "Gobierno de Datos",
+      "icono": "bi-database",
+      "tema": 1,
+      "modo": "local",
+      "responsable": "Dirección de Estrategia de Datos",
+      "lema": "Datos confiables, definidos una sola vez y usados por todos.",
+      "descripcion": "Políticas, roles y estándares que aseguran que la información de la VPAF sea única, confiable y trazable.",
+      "introduccion": "El Gobierno de Datos de la VPAF establece las políticas, roles, estándares y procesos que aseguran que la información de aprendedores, oferta y transacciones sea única, confiable y trazable en todo el ecosistema digital. Se rige por la ITIGID09 Política de Gestión de Datos Maestros y aplica el marco DAMA-DMBOK. Su agente responde con base en los artefactos certificados por el Tec de Monterrey: documentos rectores, glosarios, diccionarios y matrices CRUD.",
+      "pilares": [
+        {
+          "icono": "bi-journal-bookmark",
+          "titulo": "Políticas y estándares",
+          "texto": "ITIGID09 y DAMA-DMBOK como marco rector para definir, crear y mantener los datos."
+        },
+        {
+          "icono": "bi-people",
+          "titulo": "Roles y responsabilidades",
+          "texto": "Data owner, data steward y custodio técnico por dominio, con decisiones trazables."
+        },
+        {
+          "icono": "bi-person-vcard",
+          "titulo": "Datos maestros",
+          "texto": "Registro golden en MDM/EBX como fuente única de la persona y sus identificadores."
+        },
+        {
+          "icono": "bi-shield-check",
+          "titulo": "Calidad y trazabilidad",
+          "texto": "Reglas de calidad, clasificación de la información y linaje hacia el FUD."
+        }
+      ],
+      "titulo_temas": "Dominios de datos",
+      "intro_temas": "La información de la VPAF se organiza en seis dominios. Las definiciones vigentes están certificadas por el Tec de Monterrey y las propuestas se encuentran en validación funcional. Para conocer sus entidades, atributos o reglas, pregúntale al agente.",
+      "temas": [
+        {
+          "id": "persona",
+          "nombre": "Persona",
+          "icono": "bi-person-vcard",
+          "estado": "vigente",
+          "descripcion": "Identidad única del lead, prospecto y aprendedor."
+        },
+        {
+          "id": "oferta",
+          "nombre": "Oferta",
+          "icono": "bi-mortarboard",
+          "estado": "vigente",
+          "descripcion": "Programas, cursos y experiencias con sus ediciones."
+        },
+        {
+          "id": "ied",
+          "nombre": "Inscripción, Enrolamiento y Derecho de Acceso",
+          "icono": "bi-card-checklist",
+          "estado": "vigente",
+          "descripcion": "Relación entre la persona y la oferta."
+        },
+        {
+          "id": "captacion",
+          "nombre": "Captación",
+          "icono": "bi-bullseye",
+          "estado": "propuesta",
+          "descripcion": "Atracción de leads y prospectos."
+        },
+        {
+          "id": "transaccion",
+          "nombre": "Transacción Comercial",
+          "icono": "bi-cart-check",
+          "estado": "propuesta",
+          "descripcion": "Pedido, pago y facturación."
+        },
+        {
+          "id": "experiencia",
+          "nombre": "Experiencia del Aprendizaje",
+          "icono": "bi-graph-up-arrow",
+          "estado": "propuesta",
+          "descripcion": "Progreso, credenciales y satisfacción."
+        }
+      ],
+      "preguntas": [
+        "¿Qué es el registro golden de la persona?",
+        "¿Qué datos se piden al registrarse y cuáles post compra?",
+        "¿Qué habilitadores consumen la Tabla Golden VPAF?",
+        "¿Cuál es la diferencia entre lead y prospecto?"
+      ]
+    },
+    {
+      "id": "integracion",
+      "nombre": "Gobierno de Integración",
+      "icono": "bi-diagram-3",
+      "tema": 7,
+      "modo": "local",
+      "responsable": "Arquitectura de Integración",
+      "lema": "Cada flujo documentado, cada contrato gobernado.",
+      "descripcion": "Contratos de API, eventos y flujos entre los habilitadores del ecosistema VPAF.",
+      "introduccion": "El Gobierno de Integración define cómo se comunican los habilitadores del ecosistema VPAF: contratos de API, eventos, patrones de orquestación y el inventario de integraciones. Garantiza que cada flujo tenga un dueño, un estándar y trazabilidad de punta a punta. El equipo de integración alimenta este repositorio y opera su propio agente.",
+      "pilares": [
+        {
+          "icono": "bi-list-check",
+          "titulo": "Inventario de integraciones",
+          "texto": "Flujos origen → destino con protocolo, frecuencia y responsable."
+        },
+        {
+          "icono": "bi-file-earmark-code",
+          "titulo": "Contratos de API y eventos",
+          "texto": "Especificaciones versionadas y acuerdos de nivel de servicio."
+        },
+        {
+          "icono": "bi-bezier2",
+          "titulo": "Patrones y estándares",
+          "texto": "Orquestación con Pulsar, API-led y manejo de errores."
+        },
+        {
+          "icono": "bi-activity",
+          "titulo": "Monitoreo y trazabilidad",
+          "texto": "Observabilidad de los flujos y gestión de incidentes."
+        }
+      ],
+      "titulo_temas": "Temas del repositorio",
+      "intro_temas": "El equipo de Gobierno de Integración está cargando su información. Mientras tanto, el agente responde con el contenido disponible.",
+      "temas": [
+        {
+          "id": "inventario-integraciones",
+          "nombre": "Inventario de integraciones",
+          "icono": "bi-list-check",
+          "estado": "en carga",
+          "descripcion": "Catálogo de flujos entre habilitadores."
+        },
+        {
+          "id": "contratos-api",
+          "nombre": "Contratos de API",
+          "icono": "bi-file-earmark-code",
+          "estado": "en carga",
+          "descripcion": "Especificaciones y versiones."
+        },
+        {
+          "id": "eventos",
+          "nombre": "Eventos y orquestación",
+          "icono": "bi-broadcast",
+          "estado": "en carga",
+          "descripcion": "Triggers y aprovisionamiento vía Pulsar."
+        },
+        {
+          "id": "estandares-integracion",
+          "nombre": "Estándares de integración",
+          "icono": "bi-rulers",
+          "estado": "en carga",
+          "descripcion": "Lineamientos y buenas prácticas."
+        }
+      ],
+      "preguntas": [
+        "¿Qué integraciones consumen la Tabla Golden VPAF?",
+        "¿Cómo se orquesta el aprovisionamiento a los habilitadores?"
+      ]
+    },
+    {
+      "id": "aplicaciones",
+      "nombre": "Gobierno de Aplicaciones",
+      "icono": "bi-grid-1x2",
+      "tema": 2,
+      "modo": "local",
+      "responsable": "Arquitectura de Aplicaciones",
+      "lema": "Un portafolio claro para decidir mejor.",
+      "descripcion": "Portafolio de aplicaciones, responsables y ciclo de vida de los habilitadores VPAF.",
+      "introduccion": "El Gobierno de Aplicaciones administra el portafolio de habilitadores de la VPAF: fichas técnicas, responsables, dependencias y ciclo de vida de cada aplicación. Facilita decisiones de arquitectura, soporte y evolución tecnológica. El equipo de aplicaciones alimenta este repositorio y opera su propio agente.",
+      "pilares": [
+        {
+          "icono": "bi-collection",
+          "titulo": "Portafolio",
+          "texto": "Inventario de los habilitadores del ecosistema VPAF."
+        },
+        {
+          "icono": "bi-card-text",
+          "titulo": "Fichas de aplicación",
+          "texto": "Propósito, tecnología, integraciones y datos que gestiona."
+        },
+        {
+          "icono": "bi-arrow-repeat",
+          "titulo": "Ciclo de vida",
+          "texto": "Alta, evolución, obsolescencia y retiro de aplicaciones."
+        },
+        {
+          "icono": "bi-person-badge",
+          "titulo": "Responsables y soporte",
+          "texto": "Dueño funcional, técnico y modelo de soporte."
+        }
+      ],
+      "titulo_temas": "Temas del repositorio",
+      "intro_temas": "El equipo de Gobierno de Aplicaciones está cargando su información. Mientras tanto, el agente responde con el contenido disponible.",
+      "temas": [
+        {
+          "id": "portafolio-aplicaciones",
+          "nombre": "Portafolio de aplicaciones",
+          "icono": "bi-collection",
+          "estado": "en carga",
+          "descripcion": "Inventario de habilitadores."
+        },
+        {
+          "id": "fichas-aplicacion",
+          "nombre": "Fichas de aplicación",
+          "icono": "bi-card-text",
+          "estado": "en carga",
+          "descripcion": "Detalle técnico por aplicación."
+        },
+        {
+          "id": "ciclo-vida",
+          "nombre": "Ciclo de vida",
+          "icono": "bi-arrow-repeat",
+          "estado": "en carga",
+          "descripcion": "Estado y roadmap de cada aplicación."
+        },
+        {
+          "id": "responsables",
+          "nombre": "Responsables y soporte",
+          "icono": "bi-person-badge",
+          "estado": "en carga",
+          "descripcion": "Dueños y modelo de soporte."
+        }
+      ],
+      "preguntas": [
+        "¿Quién es responsable de VTEX?",
+        "¿Qué aplicaciones forman parte del ecosistema VPAF?"
+      ]
+    }
+  ],
+  "conocimiento": [
+    {
+      "id": "persona",
+      "codigo": "GD-DOM-PER",
+      "tipo": "Dominio de datos",
+      "nombre": "Dominio Persona",
+      "gobierno": "datos",
+      "categoria": "Datos maestros",
+      "estado": "vigente",
+      "version": "V05.3",
+      "certificacion": "Certificado TEC",
+      "fecha_certificacion": "2026-08-28",
+      "data_owner": "Dirección de Estrategia de Datos",
+      "data_steward": "Gobierno de Datos VPAF",
+      "clasificacion": "Confidencial (PII)",
+      "calidad": 4.6,
+      "consultas": 812,
+      "icono": "bi-person-vcard",
+      "tema": 1,
+      "resumen": "Identidad única del lead, prospecto y aprendedor: registro golden en MDM, identidad digital y datos de facturación.",
+      "descripcion": "Define la **identidad única de la persona física** dentro del ecosistema VPAF (lead, prospecto, aprendedor). Establece el registro golden en MDM (Tabla Golden VPAF y Persona Central), los identificadores transversales (Common Name, Golden, Clave e ID de Identidad) y las reglas de aprovisionamiento hacia los habilitadores.",
+      "entidades": [
+        {
+          "nombre": "VPAF_GOLDEN_PERSONA",
+          "tipo": "Maestra",
+          "atributos": 18,
+          "descripcion": "Registro golden de la persona en MDM VPAF."
+        },
+        {
+          "nombre": "PERSONA_CENTRAL",
+          "tipo": "Maestra",
+          "atributos": 24,
+          "descripcion": "Persona institucional validada por el proceso MDM (personas actuales Z)."
+        },
+        {
+          "nombre": "IDENTIDAD_DIGITAL",
+          "tipo": "Maestra",
+          "atributos": 9,
+          "descripcion": "Credenciales y cuenta en eID / eDirectory (NVI, NAM, SSPR)."
+        },
+        {
+          "nombre": "DATOS_FACTURACION",
+          "tipo": "Transaccional",
+          "atributos": 4,
+          "descripcion": "RFC y código postal solicitados en el proceso post compra."
+        },
+        {
+          "nombre": "MEDIO_CONTACTO",
+          "tipo": "Transversal",
+          "atributos": 6,
+          "descripcion": "Correo electrónico y teléfono móvil con su vigencia y origen."
+        }
+      ],
+      "diccionario": [
+        {
+          "entidad": "VPAF_GOLDEN_PERSONA",
+          "atributo": "COMMON_NAME",
+          "tipo": "VARCHAR2",
+          "longitud": "30",
+          "llave": "PK",
+          "pii": false,
+          "descripcion": "Identificador del registro CN.",
+          "fuente": "eDirectory"
+        },
+        {
+          "entidad": "VPAF_GOLDEN_PERSONA",
+          "atributo": "GOLDEN",
+          "tipo": "VARCHAR2",
+          "longitud": "30",
+          "llave": "",
+          "pii": false,
+          "descripcion": "Golden registro CN asignado por MDM.",
+          "fuente": "MDM/EBX"
+        },
+        {
+          "entidad": "VPAF_GOLDEN_PERSONA",
+          "atributo": "CLAVE_IDENTIDAD",
+          "tipo": "NUMBER",
+          "longitud": "8",
+          "llave": "FK",
+          "pii": false,
+          "descripcion": "Clave de la identidad de la persona.",
+          "fuente": "Identidad Digital"
+        },
+        {
+          "entidad": "VPAF_GOLDEN_PERSONA",
+          "atributo": "ID_IDENTIDAD",
+          "tipo": "VARCHAR2",
+          "longitud": "60",
+          "llave": "",
+          "pii": true,
+          "descripcion": "@ de la persona (identificador de cuenta).",
+          "fuente": "Identidad Digital"
+        },
+        {
+          "entidad": "VPAF_GOLDEN_PERSONA",
+          "atributo": "NOMBRE",
+          "tipo": "VARCHAR2",
+          "longitud": "60",
+          "llave": "",
+          "pii": true,
+          "descripcion": "Nombre(s) de la persona.",
+          "fuente": "Portal Unificado"
+        },
+        {
+          "entidad": "VPAF_GOLDEN_PERSONA",
+          "atributo": "CORREO_ELECTRONICO",
+          "tipo": "VARCHAR2",
+          "longitud": "130",
+          "llave": "",
+          "pii": true,
+          "descripcion": "Dirección de correo electrónico.",
+          "fuente": "Portal Unificado"
+        },
+        {
+          "entidad": "VPAF_GOLDEN_PERSONA",
+          "atributo": "CURP",
+          "tipo": "VARCHAR2",
+          "longitud": "18",
+          "llave": "",
+          "pii": true,
+          "descripcion": "CURP de la persona.",
+          "fuente": "MDM/EBX"
+        },
+        {
+          "entidad": "PERSONA_CENTRAL",
+          "atributo": "FECHA_NACIMIENTO",
+          "tipo": "DATE",
+          "longitud": "-",
+          "llave": "",
+          "pii": true,
+          "descripcion": "Fecha de nacimiento (solicitada por GD + MDM).",
+          "fuente": "MDM/EBX"
+        },
+        {
+          "entidad": "PERSONA_CENTRAL",
+          "atributo": "LUGAR_NACIMIENTO",
+          "tipo": "VARCHAR2",
+          "longitud": "80",
+          "llave": "",
+          "pii": true,
+          "descripcion": "Lugar de nacimiento.",
+          "fuente": "MDM/EBX"
+        },
+        {
+          "entidad": "PERSONA_CENTRAL",
+          "atributo": "SEXO",
+          "tipo": "VARCHAR2",
+          "longitud": "1",
+          "llave": "",
+          "pii": true,
+          "descripcion": "Sexo registrado.",
+          "fuente": "MDM/EBX"
+        },
+        {
+          "entidad": "DATOS_FACTURACION",
+          "atributo": "RFC",
+          "tipo": "VARCHAR2",
+          "longitud": "13",
+          "llave": "",
+          "pii": true,
+          "descripcion": "Registro Federal de Contribuyentes, solicitado post compra.",
+          "fuente": "Facturación"
+        },
+        {
+          "entidad": "DATOS_FACTURACION",
+          "atributo": "CODIGO_POSTAL",
+          "tipo": "VARCHAR2",
+          "longitud": "5",
+          "llave": "",
+          "pii": false,
+          "descripcion": "Código postal fiscal.",
+          "fuente": "Facturación"
+        }
+      ],
+      "glosario": [
+        {
+          "termino": "Aprendedor",
+          "definicion": "Persona física que cuenta con al menos un derecho de acceso activo a una oferta de la VPAF."
+        },
+        {
+          "termino": "Registro golden",
+          "definicion": "Versión única, consolidada y confiable de la persona resultante del proceso de match & merge en MDM."
+        },
+        {
+          "termino": "Common Name (CN)",
+          "definicion": "Identificador del registro de la identidad en el directorio institucional."
+        },
+        {
+          "termino": "Identidad digital",
+          "definicion": "Conjunto de credenciales (eID-VPAF) con las que la persona accede al Portal Unificado y habilitadores."
+        },
+        {
+          "termino": "Datos mínimos de registro",
+          "definicion": "6 datos al registrarse (nombre, apellidos, correo, móvil, contraseña) + 5 en proceso post compra."
+        }
+      ],
+      "habilitadores": [
+        {
+          "nombre": "Portal Unificado",
+          "crud": "C R U",
+          "descripcion": "Punto único de acceso; origen del registro de la persona."
+        },
+        {
+          "nombre": "MDM / EBX",
+          "crud": "C R U",
+          "descripcion": "Tabla Golden VPAF y Persona Central; sistema de registro."
+        },
+        {
+          "nombre": "eDirectory / NAM / SSPR",
+          "crud": "C R U",
+          "descripcion": "Identidad, autenticación y gestión segura de credenciales."
+        },
+        {
+          "nombre": "Pulsar",
+          "crud": "R",
+          "descripcion": "Orquestación de identidad y aprovisionamiento a habilitadores."
+        },
+        {
+          "nombre": "VTEX",
+          "crud": "R",
+          "descripcion": "Envío de datos de compra vía API."
+        },
+        {
+          "nombre": "FUD",
+          "crud": "R",
+          "descripcion": "Data warehouse; consulta vía IPC."
+        },
+        {
+          "nombre": "Cypherlearning / TLG / Accredible / Qualtrics",
+          "crud": "R",
+          "descripcion": "Habilitadores aprovisionados por trigger de credencialización."
+        }
+      ],
+      "documentos": [
+        {
+          "titulo": "Documento rector Dominio Persona (APROBADO)",
+          "tipo": "DOCX",
+          "version": "V1.0",
+          "fecha": "2026-07-15"
+        },
+        {
+          "titulo": "E01 Glosario Dominio Persona",
+          "tipo": "XLSX",
+          "version": "V05.3",
+          "fecha": "2026-08-28"
+        },
+        {
+          "titulo": "E02 Diccionario de datos Dominio Persona",
+          "tipo": "XLSX",
+          "version": "V05.3",
+          "fecha": "2026-08-28"
+        },
+        {
+          "titulo": "E03 Matriz CRUD Persona",
+          "tipo": "XLSX",
+          "version": "V03.1",
+          "fecha": "2026-08-10"
+        },
+        {
+          "titulo": "E05 Diagrama de secuencia identidad → MDM",
+          "tipo": "PUML",
+          "version": "V02",
+          "fecha": "2026-06-22"
+        }
+      ],
+      "preguntas": [
+        "¿Cuál es el identificador golden de una persona?",
+        "¿Qué datos se piden al registrarse y cuáles post compra?",
+        "¿Qué habilitadores consumen la Tabla Golden VPAF?"
+      ]
+    },
+    {
+      "id": "oferta",
+      "codigo": "GD-DOM-OFE",
+      "tipo": "Dominio de datos",
+      "nombre": "Dominio Oferta",
+      "gobierno": "datos",
+      "categoria": "Datos maestros",
+      "estado": "vigente",
+      "version": "V07",
+      "certificacion": "Certificado TEC",
+      "fecha_certificacion": "2026-08-20",
+      "data_owner": "Dirección de Oferta Educativa",
+      "data_steward": "Gobierno de Datos VPAF",
+      "clasificacion": "Interna",
+      "calidad": 4.5,
+      "consultas": 604,
+      "icono": "bi-mortarboard",
+      "tema": 2,
+      "resumen": "Catálogo de programas, cursos, experiencias y sus ediciones: precio, modalidad, nivel, duración y marca.",
+      "descripcion": "Define el **catálogo canónico de la oferta educativa** de la VPAF: producto, edición/grupo, precio, modalidad, nivel, idioma, duración y marca. Es la base para la publicación en el Portal Unificado y en el e-commerce.",
+      "entidades": [
+        {
+          "nombre": "PRODUCTO_OFERTA",
+          "tipo": "Maestra",
+          "atributos": 22,
+          "descripcion": "Programa, curso o experiencia con su clave única."
+        },
+        {
+          "nombre": "EDICION_OFERTA",
+          "tipo": "Maestra",
+          "atributos": 15,
+          "descripcion": "Edición con fecha de inicio, cupo y modalidad."
+        },
+        {
+          "nombre": "PRECIO_OFERTA",
+          "tipo": "Referencia",
+          "atributos": 8,
+          "descripcion": "Precio, moneda y plazos disponibles."
+        }
+      ],
+      "diccionario": [
+        {
+          "entidad": "PRODUCTO_OFERTA",
+          "atributo": "CLAVE_PRODUCTO",
+          "tipo": "VARCHAR2",
+          "longitud": "20",
+          "llave": "PK",
+          "pii": false,
+          "descripcion": "Clave única del producto (ej. AB-123456).",
+          "fuente": "SEA"
+        },
+        {
+          "entidad": "PRODUCTO_OFERTA",
+          "atributo": "NOMBRE_PRODUCTO",
+          "tipo": "VARCHAR2",
+          "longitud": "200",
+          "llave": "",
+          "pii": false,
+          "descripcion": "Nombre comercial.",
+          "fuente": "SEA"
+        },
+        {
+          "entidad": "PRODUCTO_OFERTA",
+          "atributo": "TIPO_APRENDIZAJE",
+          "tipo": "VARCHAR2",
+          "longitud": "30",
+          "llave": "",
+          "pii": false,
+          "descripcion": "Curso, programa, certificado, experiencia.",
+          "fuente": "SEA"
+        },
+        {
+          "entidad": "EDICION_OFERTA",
+          "atributo": "FECHA_INICIO",
+          "tipo": "DATE",
+          "longitud": "-",
+          "llave": "",
+          "pii": false,
+          "descripcion": "Fecha disponible de inicio.",
+          "fuente": "SEA"
+        },
+        {
+          "entidad": "EDICION_OFERTA",
+          "atributo": "MODALIDAD",
+          "tipo": "VARCHAR2",
+          "longitud": "20",
+          "llave": "",
+          "pii": false,
+          "descripcion": "Presencial, en línea o híbrido.",
+          "fuente": "SEA"
+        },
+        {
+          "entidad": "EDICION_OFERTA",
+          "atributo": "CUPO",
+          "tipo": "NUMBER",
+          "longitud": "5",
+          "llave": "",
+          "pii": false,
+          "descripcion": "Cupos disponibles.",
+          "fuente": "SEA"
+        },
+        {
+          "entidad": "PRECIO_OFERTA",
+          "atributo": "PRECIO",
+          "tipo": "NUMBER",
+          "longitud": "12,2",
+          "llave": "",
+          "pii": false,
+          "descripcion": "Precio base en MXN.",
+          "fuente": "VTEX"
+        }
+      ],
+      "glosario": [
+        {
+          "termino": "Oferta",
+          "definicion": "Producto educativo publicable de la VPAF (programa, curso, certificado o experiencia)."
+        },
+        {
+          "termino": "Edición",
+          "definicion": "Instancia de una oferta con fechas, cupo y modalidad concretas."
+        }
+      ],
+      "habilitadores": [
+        {
+          "nombre": "SEA",
+          "crud": "C R U D",
+          "descripcion": "Sistema de registro de la oferta."
+        },
+        {
+          "nombre": "VTEX",
+          "crud": "R U",
+          "descripcion": "Publicación comercial y precio."
+        },
+        {
+          "nombre": "Portal Unificado",
+          "crud": "R",
+          "descripcion": "Catálogo visible al aprendedor."
+        }
+      ],
+      "documentos": [
+        {
+          "titulo": "Documento rector Dominio Oferta (APROBADO)",
+          "tipo": "DOCX",
+          "version": "V1.0",
+          "fecha": "2026-07-02"
+        },
+        {
+          "titulo": "E02 Diccionario de datos Dominio Oferta",
+          "tipo": "XLSX",
+          "version": "V07",
+          "fecha": "2026-08-20"
+        }
+      ],
+      "preguntas": [
+        "¿Cuál es la llave única de un producto de oferta?",
+        "¿Qué habilitador es sistema de registro de la oferta?"
+      ]
+    },
+    {
+      "id": "ied",
+      "codigo": "GD-DOM-IED",
+      "tipo": "Dominio de datos",
+      "nombre": "Inscripción, Enrolamiento y Derecho de Acceso",
+      "gobierno": "datos",
+      "categoria": "Datos transaccionales",
+      "estado": "vigente",
+      "version": "V1.5",
+      "certificacion": "Certificado TEC",
+      "fecha_certificacion": "2026-09-05",
+      "data_owner": "Dirección de Servicios Escolares VPAF",
+      "data_steward": "Gobierno de Datos VPAF",
+      "clasificacion": "Confidencial",
+      "calidad": 4.4,
+      "consultas": 377,
+      "icono": "bi-card-checklist",
+      "tema": 3,
+      "resumen": "Relación persona–oferta: inscripción, enrolamiento en LXP y derecho de acceso con su vigencia.",
+      "descripcion": "Modela el **ciclo inscripción → enrolamiento → derecho de acceso** que vincula a la persona con una edición de oferta, incluyendo estados, vigencias y eventos de baja.",
+      "entidades": [
+        {
+          "nombre": "INSCRIPCION",
+          "tipo": "Transaccional",
+          "atributos": 14,
+          "descripcion": "Solicitud formal de la persona a una edición."
+        },
+        {
+          "nombre": "ENROLAMIENTO",
+          "tipo": "Transaccional",
+          "atributos": 11,
+          "descripcion": "Alta en la plataforma de aprendizaje."
+        },
+        {
+          "nombre": "DERECHO_ACCESO",
+          "tipo": "Transaccional",
+          "atributos": 9,
+          "descripcion": "Permiso vigente de acceso al contenido."
+        }
+      ],
+      "diccionario": [
+        {
+          "entidad": "INSCRIPCION",
+          "atributo": "ID_INSCRIPCION",
+          "tipo": "VARCHAR2",
+          "longitud": "36",
+          "llave": "PK",
+          "pii": false,
+          "descripcion": "Identificador de la inscripción.",
+          "fuente": "Pulsar"
+        },
+        {
+          "entidad": "INSCRIPCION",
+          "atributo": "GOLDEN",
+          "tipo": "VARCHAR2",
+          "longitud": "30",
+          "llave": "FK",
+          "pii": false,
+          "descripcion": "Llave de vinculación con Dominio Persona.",
+          "fuente": "MDM/EBX"
+        },
+        {
+          "entidad": "INSCRIPCION",
+          "atributo": "CLAVE_PRODUCTO",
+          "tipo": "VARCHAR2",
+          "longitud": "20",
+          "llave": "FK",
+          "pii": false,
+          "descripcion": "Llave de vinculación con Dominio Oferta.",
+          "fuente": "SEA"
+        },
+        {
+          "entidad": "DERECHO_ACCESO",
+          "atributo": "FECHA_FIN_VIGENCIA",
+          "tipo": "DATE",
+          "longitud": "-",
+          "llave": "",
+          "pii": false,
+          "descripcion": "Fin de vigencia del derecho.",
+          "fuente": "Pulsar"
+        }
+      ],
+      "glosario": [
+        {
+          "termino": "Derecho de acceso",
+          "definicion": "Autorización vigente que habilita a la persona a consumir una oferta."
+        }
+      ],
+      "habilitadores": [
+        {
+          "nombre": "Pulsar",
+          "crud": "C R U",
+          "descripcion": "Orquesta inscripción y aprovisionamiento."
+        },
+        {
+          "nombre": "Cypherlearning",
+          "crud": "C R U",
+          "descripcion": "Enrolamiento en LXP."
+        }
+      ],
+      "documentos": [
+        {
+          "titulo": "Documento rector IED (APROBADO)",
+          "tipo": "DOCX",
+          "version": "V1.0",
+          "fecha": "2026-07-20"
+        },
+        {
+          "titulo": "E02 Diccionario IED",
+          "tipo": "XLSX",
+          "version": "V1.5",
+          "fecha": "2026-09-05"
+        }
+      ],
+      "preguntas": [
+        "¿Cómo se vincula una inscripción con la persona y la oferta?"
+      ]
+    },
+    {
+      "id": "captacion",
+      "codigo": "GD-DOM-CAP",
+      "tipo": "Dominio de datos",
+      "nombre": "Dominio Captación",
+      "gobierno": "datos",
+      "categoria": "Datos de relación",
+      "estado": "propuesta",
+      "version": "V02",
+      "certificacion": "Propuesta GD",
+      "fecha_certificacion": "",
+      "data_owner": "Dirección de Mercadotecnia VPAF",
+      "data_steward": "Gobierno de Datos VPAF",
+      "clasificacion": "Confidencial (PII)",
+      "calidad": 3.9,
+      "consultas": 145,
+      "icono": "bi-bullseye",
+      "tema": 4,
+      "resumen": "Lead, prospecto, contacto y cuenta: datos mínimos de Salesforce y HubSpot para la atracción.",
+      "descripcion": "Propuesta de Gobierno de Datos para el **ciclo de atracción** (lead → prospecto) con los datos mínimos de Salesforce y HubSpot. Pendiente de validación funcional.",
+      "entidades": [
+        {
+          "nombre": "LEAD",
+          "tipo": "Transaccional",
+          "atributos": 16,
+          "descripcion": "Interesado capturado por campaña."
+        },
+        {
+          "nombre": "PROSPECTO",
+          "tipo": "Transaccional",
+          "atributos": 20,
+          "descripcion": "Lead calificado con interés en una oferta."
+        }
+      ],
+      "diccionario": [
+        {
+          "entidad": "LEAD",
+          "atributo": "ID_LEAD",
+          "tipo": "VARCHAR2",
+          "longitud": "18",
+          "llave": "PK",
+          "pii": false,
+          "descripcion": "Id de Salesforce.",
+          "fuente": "Salesforce"
+        },
+        {
+          "entidad": "LEAD",
+          "atributo": "ORIGEN_CAMPANA",
+          "tipo": "VARCHAR2",
+          "longitud": "80",
+          "llave": "",
+          "pii": false,
+          "descripcion": "Campaña de origen.",
+          "fuente": "HubSpot"
+        }
+      ],
+      "glosario": [
+        {
+          "termino": "Lead",
+          "definicion": "Persona que manifestó interés sin haber sido calificada."
+        }
+      ],
+      "habilitadores": [
+        {
+          "nombre": "Salesforce",
+          "crud": "C R U",
+          "descripcion": "CRM de captación."
+        },
+        {
+          "nombre": "HubSpot",
+          "crud": "C R",
+          "descripcion": "Prospección y campañas."
+        }
+      ],
+      "documentos": [
+        {
+          "titulo": "Propuesta Dominio Captación",
+          "tipo": "XLSX",
+          "version": "V02",
+          "fecha": "2026-09-10"
+        }
+      ],
+      "preguntas": [
+        "¿Cuál es la diferencia entre lead y prospecto?"
+      ]
+    },
+    {
+      "id": "transaccion",
+      "codigo": "GD-DOM-TRC",
+      "tipo": "Dominio de datos",
+      "nombre": "Transacción Comercial",
+      "gobierno": "datos",
+      "categoria": "Datos transaccionales",
+      "estado": "propuesta",
+      "version": "V02",
+      "certificacion": "Propuesta GD",
+      "fecha_certificacion": "",
+      "data_owner": "Dirección de Finanzas VPAF",
+      "data_steward": "Gobierno de Datos VPAF",
+      "clasificacion": "Confidencial",
+      "calidad": 3.8,
+      "consultas": 98,
+      "icono": "bi-cart-check",
+      "tema": 5,
+      "resumen": "Pedido, pago y facturación desde el checkout de VTEX y el gestor de pagos.",
+      "descripcion": "Propuesta GD (antes Compra y Pago) para **pedido, pago y facturación**: checkout VTEX, gestor de pagos (OpenPay) y registro contable.",
+      "entidades": [
+        {
+          "nombre": "PEDIDO",
+          "tipo": "Transaccional",
+          "atributos": 25,
+          "descripcion": "Orden generada en el checkout."
+        },
+        {
+          "nombre": "PAGO",
+          "tipo": "Transaccional",
+          "atributos": 14,
+          "descripcion": "Cobro asociado al pedido."
+        }
+      ],
+      "diccionario": [
+        {
+          "entidad": "PEDIDO",
+          "atributo": "ID_PEDIDO",
+          "tipo": "VARCHAR2",
+          "longitud": "30",
+          "llave": "PK",
+          "pii": false,
+          "descripcion": "Identificador del pedido VTEX.",
+          "fuente": "VTEX"
+        },
+        {
+          "entidad": "PAGO",
+          "atributo": "ESTATUS_PAGO",
+          "tipo": "VARCHAR2",
+          "longitud": "20",
+          "llave": "",
+          "pii": false,
+          "descripcion": "Autorizado, rechazado, reembolsado.",
+          "fuente": "OpenPay"
+        }
+      ],
+      "glosario": [
+        {
+          "termino": "Checkout externo",
+          "definicion": "Flujo de compra completado fuera del sitio principal."
+        }
+      ],
+      "habilitadores": [
+        {
+          "nombre": "VTEX",
+          "crud": "C R U",
+          "descripcion": "E-commerce."
+        },
+        {
+          "nombre": "OpenPay",
+          "crud": "C R",
+          "descripcion": "Gestor de pagos."
+        }
+      ],
+      "documentos": [
+        {
+          "titulo": "Propuesta Dominio Transacción Comercial",
+          "tipo": "XLSX",
+          "version": "V02",
+          "fecha": "2026-09-12"
+        }
+      ],
+      "preguntas": [
+        "¿Qué estatus puede tener un pago?"
+      ]
+    },
+    {
+      "id": "experiencia",
+      "codigo": "GD-DOM-EXA",
+      "tipo": "Dominio de datos",
+      "nombre": "Experiencia del Aprendizaje",
+      "gobierno": "datos",
+      "categoria": "Datos de comportamiento",
+      "estado": "propuesta",
+      "version": "V01",
+      "certificacion": "Propuesta GD",
+      "fecha_certificacion": "",
+      "data_owner": "Dirección de Experiencia VPAF",
+      "data_steward": "Gobierno de Datos VPAF",
+      "clasificacion": "Interna",
+      "calidad": 3.6,
+      "consultas": 64,
+      "icono": "bi-graph-up-arrow",
+      "tema": 6,
+      "resumen": "Progreso, insignias, certificados y encuestas de satisfacción del aprendedor.",
+      "descripcion": "Propuesta GD para **progreso, logros y satisfacción**: avance en LXP, insignias/certificados (Accredible) y encuestas (Qualtrics).",
+      "entidades": [
+        {
+          "nombre": "PROGRESO",
+          "tipo": "Transaccional",
+          "atributos": 10,
+          "descripcion": "Avance por curso."
+        },
+        {
+          "nombre": "CREDENCIAL",
+          "tipo": "Transaccional",
+          "atributos": 9,
+          "descripcion": "Insignia o certificado emitido."
+        },
+        {
+          "nombre": "ENCUESTA",
+          "tipo": "Transaccional",
+          "atributos": 12,
+          "descripcion": "Respuesta de satisfacción."
+        }
+      ],
+      "diccionario": [
+        {
+          "entidad": "PROGRESO",
+          "atributo": "PORCENTAJE_AVANCE",
+          "tipo": "NUMBER",
+          "longitud": "3",
+          "llave": "",
+          "pii": false,
+          "descripcion": "Avance del curso (0-100).",
+          "fuente": "Cypherlearning"
+        }
+      ],
+      "glosario": [
+        {
+          "termino": "Credencial digital",
+          "definicion": "Insignia o certificado verificable emitido al concluir una oferta."
+        }
+      ],
+      "habilitadores": [
+        {
+          "nombre": "Cypherlearning",
+          "crud": "C R U",
+          "descripcion": "LXP."
+        },
+        {
+          "nombre": "Accredible",
+          "crud": "C R",
+          "descripcion": "Credenciales."
+        },
+        {
+          "nombre": "Qualtrics",
+          "crud": "C R",
+          "descripcion": "Encuestas."
+        }
+      ],
+      "documentos": [
+        {
+          "titulo": "Propuesta Dominio Experiencia del Aprendizaje",
+          "tipo": "XLSX",
+          "version": "V01",
+          "fecha": "2026-09-14"
+        }
+      ],
+      "preguntas": [
+        "¿Dónde se registran las insignias del aprendedor?"
+      ]
+    },
+    {
+      "id": "inventario-integraciones",
+      "codigo": "GI-CAT-INT",
+      "tipo": "Catálogo de integración",
+      "nombre": "Inventario de Integraciones VPAF",
+      "gobierno": "integracion",
+      "categoria": "APIs y eventos",
+      "estado": "propuesta",
+      "version": "V09",
+      "certificacion": "En carga",
+      "fecha_certificacion": "",
+      "data_owner": "Arquitectura de Integración",
+      "data_steward": "Gobierno de Integración",
+      "clasificacion": "Interna",
+      "calidad": 4.0,
+      "consultas": 51,
+      "icono": "bi-diagram-3",
+      "tema": 7,
+      "resumen": "Contratos de API, eventos y flujos entre Portal Unificado, MDM, Pulsar, VTEX y habilitadores.",
+      "descripcion": "Espacio del **Gobierno de Integración**. Este equipo carga su inventario y conecta su propio agente RAG.",
+      "entidades": [
+        {
+          "nombre": "INTEGRACION",
+          "tipo": "Catálogo",
+          "atributos": 12,
+          "descripcion": "Flujo origen → destino con protocolo y frecuencia."
+        }
+      ],
+      "diccionario": [],
+      "glosario": [],
+      "habilitadores": [
+        {
+          "nombre": "Pulsar",
+          "crud": "R",
+          "descripcion": "Orquestador."
+        }
+      ],
+      "documentos": [],
+      "preguntas": [
+        "¿Qué integraciones consumen la Tabla Golden VPAF?"
+      ]
+    },
+    {
+      "id": "portafolio-aplicaciones",
+      "codigo": "GA-CAT-APP",
+      "tipo": "Catálogo de aplicaciones",
+      "nombre": "Portafolio de Aplicaciones VPAF",
+      "gobierno": "aplicaciones",
+      "categoria": "Habilitadores",
+      "estado": "propuesta",
+      "version": "V01",
+      "certificacion": "En carga",
+      "fecha_certificacion": "",
+      "data_owner": "Arquitectura de Aplicaciones",
+      "data_steward": "Gobierno de Aplicaciones",
+      "clasificacion": "Interna",
+      "calidad": 4.0,
+      "consultas": 33,
+      "icono": "bi-grid-1x2",
+      "tema": 2,
+      "resumen": "Fichas técnicas de los ~40 habilitadores: responsable, ciclo de vida y dependencias.",
+      "descripcion": "Espacio del **Gobierno de Aplicaciones**. Este equipo carga su portafolio y conecta su propio agente RAG.",
+      "entidades": [
+        {
+          "nombre": "APLICACION",
+          "tipo": "Catálogo",
+          "atributos": 20,
+          "descripcion": "Ficha de la aplicación."
+        }
+      ],
+      "diccionario": [],
+      "glosario": [],
+      "habilitadores": [],
+      "documentos": [],
+      "preguntas": [
+        "¿Quién es responsable de VTEX?"
+      ]
+    }
+  ]
+}
