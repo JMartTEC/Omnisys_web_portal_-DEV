@@ -20,7 +20,9 @@
         <div class="collapse navbar-collapse" id="gdNav">
           <ul class="navbar-nav me-auto">
             ${link("portal.html", "inicio", "Inicio")}
-            ${C.GOBIERNOS.map((g) => link("gobierno.html?id=" + g.id, g.id, g.nombre)).join("")}
+            ${C.GOBIERNOS.map((g) => g.url
+              ? `<li class="nav-item"><a class="nav-link" href="${g.url}" target="_blank" rel="noopener" title="Abre el Portal APM en una pestaña nueva">${g.nombre} <i class="bi bi-box-arrow-up-right small ms-1"></i></a></li>`
+              : link("gobierno.html?id=" + g.id, g.id, g.nombre)).join("")}
             ${link("carga.html", "espacio", "Mi espacio")}
           </ul>
           <div class="d-flex align-items-center gap-2 gap-lg-3 py-2 py-xl-0">

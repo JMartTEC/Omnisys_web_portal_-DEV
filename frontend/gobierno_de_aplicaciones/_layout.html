@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gobierno de Aplicaciones · Portal APM TEC</title>
+<link rel="stylesheet" href="/gobierno_de_aplicaciones/assets/css/comun.css">
+</head>
+<body data-paso="{{PASO}}">
+
+<!-- Barra superior con el mismo estilo del Portal GD 360 -->
+<header class="cabecera">
+  <nav class="menu-principal" aria-label="Menú principal">
+    <div class="barra-fila">
+      <a class="marca" href="/gobierno_de_aplicaciones/" aria-label="Ir al inicio del Portal APM">
+        <span class="marca-titulo">Portal APM TEC</span>
+        <span class="marca-sub">Gobierno de Aplicaciones VPAF</span>
+      </a>
+      <div class="sellos">
+        <a class="sello sello-boton" id="btn-inicio" href="/gobierno_de_aplicaciones/">Inicio</a>
+        <a class="sello sello-boton" id="btn-conciliar" href="/gobierno_de_aplicaciones/conciliar">Comparar APM</a>
+        <a class="sello sello-boton" id="btn-tdd2" href="/gobierno_de_aplicaciones/tdd2">Comparar TDD Nivel 2</a>
+        <a class="sello sello-boton" id="sello-docs" href="/gobierno_de_aplicaciones/docs" hidden></a>
+        <a class="sello sello-boton" id="btn-config" href="/gobierno_de_aplicaciones/config">Configuración API key</a>
+      </div>
+      <div class="barra-derecha">
+        <a class="volver-gd" id="btn-manual" href="/gobierno_de_aplicaciones/assets/manual/Manual_de_usuario_Portal_APM_TEC.pdf"
+           target="_blank" rel="noopener" title="Abre el manual de usuario en una pestaña nueva">Manual de usuario</a>
+        <a class="volver-gd" href="/" title="Regresar al Portal GD 360">Portal GD 360</a>
+      </div>
+    </div>
+  </nav>
+  <div class="franja-aviso"><span>Portal APM: clasifica documentos, llena el APM y los TDD Nivel 2 con revisión humana.</span>
+    <span class="sello" id="sello-proveedor" hidden></span></div>
+</header>
+
+<!-- Banner degradado, como los de GD 360 -->
+<div class="contenedor">
+  <section class="banner-gd">
+    <div class="banner-texto">
+      <span class="banner-titulo">Clasificador de activos de conocimiento IA-ready</span>
+      <span class="banner-sub">De documentos sueltos a activos indexables, con revisión humana.</span>
+    </div>
+    <svg class="banner-arte" viewBox="0 0 64 64" aria-hidden="true">
+      <path d="M26 6c2 12 6 16 18 18-12 2-16 6-18 18-2-12-6-16-18-18 12-2 16-6 18-18z"/>
+      <path d="M48 34c1 6 3 8 9 9-6 1-8 3-9 9-1-6-3-8-9-9 6-1 8-3 9-9z"/>
+      <path d="M50 4c.8 4 2 5.2 6 6-4 .8-5.2 2-6 6-.8-4-2-5.2-6-6 4-.8 5.2-2 6-6z"/>
+    </svg>
+  </section>
+</div>
+
+{{NAV_PASOS}}
+
+<main class="contenedor">
+{{CONTENIDO}}
+</main>
+
+<footer class="pie">
+  <div class="contenedor pie-fila">
+    <span>© 2026 Tecnológico de Monterrey · Clasificador de activos de conocimiento IA-ready</span>
+    <span>Desarrollado por <b>Omnisys S.A. de C.V.</b></span>
+  </div>
+</footer>
+
+<script>
+  // Marca en el menú la sección en la que está el usuario.
+  (function () {
+    var p = location.pathname, id = "btn-inicio";
+    if (p.indexOf("/gobierno_de_aplicaciones/conciliar") === 0) id = "btn-conciliar";
+    else if (p.indexOf("/gobierno_de_aplicaciones/tdd2") === 0) id = "btn-tdd2";
+    else if (p.indexOf("/gobierno_de_aplicaciones/docs") === 0) id = "sello-docs";
+    else if (p.indexOf("/gobierno_de_aplicaciones/config") === 0) id = "btn-config";
+    var el = document.getElementById(id);
+    if (el) { el.classList.add("actual"); el.setAttribute("aria-current", "page"); }
+  })();
+</script>
+<script src="/gobierno_de_aplicaciones/assets/js/comun.js"></script>
+{{JS_PANTALLA}}
+</body>
+</html>

@@ -15,7 +15,11 @@
     GOBIERNOS: [
       { id: "datos", nombre: "Gobierno de Datos", icono: "bi-database" },
       { id: "integracion", nombre: "Gobierno de Integración", icono: "bi-diagram-3" },
-      { id: "aplicaciones", nombre: "Gobierno de Aplicaciones", icono: "bi-grid-1x2" }
+      // Gobierno de Aplicaciones abre el Portal APM TEC (lo sirve el backend en
+      // /gobierno_de_aplicaciones/) en una pestaña nueva.
+      { id: "aplicaciones", nombre: "Gobierno de Aplicaciones", icono: "bi-grid-1x2",
+        url: (env.API_BASE_URL || "").replace(/\/$/, "") + "/gobierno_de_aplicaciones/",
+        textoBoton: "Entrar al portal del APM" }
     ]
   };
 })();

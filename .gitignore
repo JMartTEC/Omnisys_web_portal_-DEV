@@ -6,3 +6,8 @@ __pycache__/
 node_modules/
 dist/
 .DS_Store
+
+# Gobierno de Aplicaciones (Portal APM TEC): datos y archivos de trabajo locales
+backend/datos/
+backend/_subidos/
+*.log

@@ -17,6 +17,8 @@
   document.getElementById("roleText").textContent =
     `Ingresaste como ${u.rol} de ${gobName(u.gobierno)}. Puedes consultar a los tres agentes y cargar información al repositorio de tu gobierno desde "Mi espacio".`;
 
+  // Gobiernos que abren otro portal (Prototipo Web Omnisys: Aplicaciones -> Portal APM).
+  const externo = (id) => (window.GD_CONFIG.GOBIERNOS.find((x) => x.id === id && x.url) || null);
   const card = (g) => {
     const st = g.estadisticas || {};
     const activo = st.fragmentos > 0;
@@ -38,9 +40,11 @@
             <span><i class="bi bi-file-earmark-text"></i>${st.documentos || 0} ${st.documentos === 1 ? "documento" : "documentos"}</span>
             <span><i class="bi bi-database"></i>${(st.fragmentos || 0).toLocaleString("es-MX")} ${st.fragmentos === 1 ? "fragmento" : "fragmentos"}</span>
           </div>
-          <div class="mt-auto d-flex justify-content-between align-items-center gap-2">
+          <div class="mt-auto d-flex flex-wrap justify-content-between align-items-center gap-2">
             <a class="btn btn-link-gd px-0 small" href="gobierno.html?id=${g.id}#agente"><i class="bi bi-chat-dots me-1"></i>Preguntar</a>
-            <a class="btn btn-gd" href="gobierno.html?id=${g.id}">Entrar a la sección</a>
+            ${externo(g.id)
+              ? `<a class="btn btn-gd" href="${externo(g.id).url}" target="_blank" rel="noopener" title="Abre el Portal APM en una pestaña nueva">${externo(g.id).textoBoton}<i class="bi bi-box-arrow-up-right ms-2"></i></a>`
+              : `<a class="btn btn-gd" href="gobierno.html?id=${g.id}">Entrar a la sección</a>`}
           </div>
         </div>
       </article>
