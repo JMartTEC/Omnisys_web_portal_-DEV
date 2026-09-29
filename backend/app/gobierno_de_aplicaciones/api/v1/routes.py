@@ -49,7 +49,7 @@ CARPETA_DATOS = MODULO_DIR / "datos"
 # Los archivos que se suben por el navegador viven aqui mientras dura la
 # sesion de trabajo. Es carpeta desechable: se puede borrar entera sin perder
 # nada, porque lo que importa de cada documento ya quedo en el almacen.
-CARPETA_SUBIDOS = BASE_DIR / "_subidos"
+CARPETA_SUBIDOS = MODULO_DIR / "_subidos"
 # La "referencia activa": una copia interna del APM y de cada TDD, con nombre
 # FIJO que nunca cambia (a diferencia de las versiones numeradas que "Hacer
 # nueva version" deja en datos/salidas/ para que alguien se las lleve). Vive
@@ -2648,7 +2648,7 @@ def _docs_tdd_normalizado(nombre: str) -> str:
 def _docs_tdd_disponibles() -> dict[str, str]:
     """Los TDD que hay en la carpeta docs/ del proyecto, como
     {nombre_normalizado: nombre_de_archivo}."""
-    carpeta = BASE_DIR.parent / "docs"
+    carpeta = MODULO_DIR / "docs"
     disponibles: dict[str, str] = {}
     if not carpeta.is_dir():
         return disponibles
