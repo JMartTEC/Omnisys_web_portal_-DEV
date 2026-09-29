@@ -43,8 +43,9 @@ from ...services.parsers.base import DocumentoIlegible, FormatoNoSoportado
 
 
 # routes.py vive en backend/app/gobierno_de_aplicaciones/api/v1/: parents[4] es backend/.
-BASE_DIR = Path(__file__).resolve().parents[4]
-CARPETA_DATOS = BASE_DIR / "datos"
+BASE_DIR = Path(__file__).resolve().parents[4]        # backend/
+MODULO_DIR = Path(__file__).resolve().parents[2]       # backend/app/gobierno_de_aplicaciones/
+CARPETA_DATOS = MODULO_DIR / "datos"
 # Los archivos que se suben por el navegador viven aqui mientras dura la
 # sesion de trabajo. Es carpeta desechable: se puede borrar entera sin perder
 # nada, porque lo que importa de cada documento ya quedo en el almacen.
