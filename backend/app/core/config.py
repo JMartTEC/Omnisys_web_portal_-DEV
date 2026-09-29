@@ -1,6 +1,9 @@
 """Configuración por variables de entorno (Render -> Environment)."""
+import logging
 from functools import lru_cache
 from pathlib import Path
+
+log = logging.getLogger(__name__)
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -40,14 +43,24 @@ class Settings(BaseSettings):
     MAX_UPLOAD_MB: int = 20
     CATALOGO_PATH: Path = BASE_DIR / "data" / "catalogo.json"
 
-    # Inyectado por render.yaml (fromService.property=host) con el host del Static Site
+    # Capturado a mano en Render -> Environment (sync:false en render.yaml) con el
+    # dominio COMPLETO del portal, ej: gd-portal-qv63.onrender.com (sin https://).
     FRONTEND_HOST: str = ""
 
     @property
     def cors_list(self) -> list[str]:
         origins = [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
-        if self.FRONTEND_HOST:
-            origins.append(f"https://{self.FRONTEND_HOST}")
+        host = self.FRONTEND_HOST.strip()
+        if host:
+            if "." not in host:
+                # Host incompleto (p.ej. un fromService/property:host de Render, que
+                # entrega el nombre interno sin ".onrender.com") -- CORS no funcionaria,
+                # mejor avisar fuerte en el log que fallar en silencio en el navegador.
+                log.warning(
+                    "FRONTEND_HOST=%r no parece un dominio completo; CORS del portal "
+                    "puede fallar. Revisa Render -> gd-rag-api -> Environment.", host,
+                )
+            origins.append(f"https://{host}")
         return origins
 
 

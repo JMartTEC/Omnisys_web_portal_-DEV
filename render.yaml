@@ -21,11 +21,13 @@ services:
         generateValue: true         # Render genera un secreto aleatorio
       - key: JWT_EXPIRE_MINUTES
         value: "480"
-      - key: FRONTEND_HOST          # habilita CORS para el portal
-        fromService:
-          type: web
-          name: gd-portal
-          property: host
+      # FRONTEND_HOST habilita CORS para el portal. NO usar fromService/property:host:
+      # Render solo entrega ahi el nombre interno (sin .onrender.com), lo que rompe
+      # el CORS en cuanto Render le puso un sufijo al nombre del otro servicio
+      # (choque de nombre global). sync:false => se captura a mano en el dashboard
+      # con el dominio COMPLETO del portal, ej: gd-portal-qv63.onrender.com (sin https://).
+      - key: FRONTEND_HOST
+        sync: false
       - key: CORS_ORIGINS
         value: http://localhost:5500
       - key: EMBEDDINGS_PROVIDER
@@ -52,11 +54,13 @@ services:
     staticPublishPath: .
     autoDeploy: true
     envVars:
-      - key: API_HOST               # el build genera assets/js/env.js con https://<API_HOST>
-        fromService:
-          type: web
-          name: gd-rag-api
-          property: host
+      # API_BASE_URL: URL publica y COMPLETA del backend (con https:// y .onrender.com).
+      # NO usar fromService/property:host aqui: solo entrega el nombre interno sin
+      # dominio, lo que genero un env.js con una URL invalida ("Failed to fetch" al
+      # iniciar sesion). sync:false => se captura a mano en el dashboard, ej:
+      # https://gd-rag-api-45up.onrender.com
+      - key: API_BASE_URL
+        sync: false
       - key: USE_MOCK
         value: "false"              # "true" para publicar el portal sin backend (solo look and feel)
       - key: ENV_NAME
