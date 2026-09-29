@@ -34,16 +34,19 @@ CLAVES = [
     "ANTHROPIC_API_KEY",
     "ANTHROPIC_WORKSPACE_ID",
     "ANTHROPIC_MODEL",
+    "GEMINI_API_KEY",
+    "GEMINI_MODEL",
     "OLLAMA_MODEL",
     "OLLAMA_HOST",
     "OLLAMA_MAX_CHARS",
 ]
 
-SECRETAS = {"ANTHROPIC_API_KEY"}
+SECRETAS = {"ANTHROPIC_API_KEY", "GEMINI_API_KEY"}
 
 DEFECTOS = {
     "AI_MODO": "local",
     "ANTHROPIC_MODEL": "claude-sonnet-5",
+    "GEMINI_MODEL": "gemini-2.5-flash",
     "OLLAMA_MODEL": "qwen3:8b",
     "OLLAMA_HOST": "http://127.0.0.1:11434",
     "OLLAMA_MAX_CHARS": "18000",
@@ -55,10 +58,21 @@ MODELOS_CLAUDE = [
     "claude-haiku-4-5-20251001",
 ]
 
+# Gemini SI lee imagenes (a diferencia de Ollama), asi que es un respaldo
+# gratuito real cuando no hay llave de Claude -- no depende de que la
+# maquina tenga algo corriendo localmente. flash-lite es la opcion mas
+# ligera/rapida del nivel gratuito; flash es el equilibrio recomendado.
+MODELOS_GEMINI = [
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-2.5-pro",
+]
+
 MODOS = [
-    {"valor": "local", "etiqueta": "Local (Ollama) · sin API key"},
+    {"valor": "local", "etiqueta": "Local (Ollama) · sin API key, solo desarrollo"},
     {"valor": "claude", "etiqueta": "Claude API · requiere llave"},
-    {"valor": "", "etiqueta": "Automatico (API si hay llave, si no local)"},
+    {"valor": "gemini", "etiqueta": "Gemini API · requiere llave gratuita"},
+    {"valor": "", "etiqueta": "Automatico (Claude, si no Gemini, si no local)"},
 ]
 
 
@@ -93,19 +107,24 @@ def estado() -> dict:
     """Lo que ve la pantalla. La llave va ENMASCARADA, nunca completa."""
     env = leer_env()
     llave = env.get("ANTHROPIC_API_KEY", "")
+    llave_gemini = env.get("GEMINI_API_KEY", "")
     return {
         "ai_modo": env.get("AI_MODO", DEFECTOS["AI_MODO"]),
         "anthropic_model": env.get("ANTHROPIC_MODEL", DEFECTOS["ANTHROPIC_MODEL"]),
         "anthropic_workspace_id": env.get("ANTHROPIC_WORKSPACE_ID", ""),
+        "gemini_model": env.get("GEMINI_MODEL", DEFECTOS["GEMINI_MODEL"]),
         "ollama_model": env.get("OLLAMA_MODEL", DEFECTOS["OLLAMA_MODEL"]),
         "ollama_host": env.get("OLLAMA_HOST", DEFECTOS["OLLAMA_HOST"]),
         "ollama_max_chars": env.get("OLLAMA_MAX_CHARS", DEFECTOS["OLLAMA_MAX_CHARS"]),
-        # --- sobre la llave, solo metadatos ---
+        # --- sobre las llaves, solo metadatos ---
         "tiene_llave": bool(llave),
         "llave_enmascarada": enmascarar(llave),
+        "tiene_llave_gemini": bool(llave_gemini),
+        "llave_gemini_enmascarada": enmascarar(llave_gemini),
         # --- catalogos para la pantalla ---
         "modos": MODOS,
         "modelos_claude": MODELOS_CLAUDE,
+        "modelos_gemini": MODELOS_GEMINI,
         "ruta_env": str(RUTA_ENV),
     }
 
@@ -170,13 +189,17 @@ def guardar(entrada: dict) -> dict:
     return {"cambios": cambios}
 
 
-def borrar_llave() -> None:
-    """Quita la API key del .env y del proceso. Para cuando hay que rotarla."""
-    guardar_directo = leer_env()
-    guardar_directo.pop("ANTHROPIC_API_KEY", None)
+def borrar_llave(clave: str = "ANTHROPIC_API_KEY") -> None:
+    """Quita una API key del .env y del proceso. Para cuando hay que rotarla.
+
+    `clave` es "ANTHROPIC_API_KEY" (por defecto, compatibilidad con el
+    llamado anterior) o "GEMINI_API_KEY".
+    """
+    if clave not in SECRETAS:
+        raise ValueError(f"clave no reconocida: {clave}")
     if RUTA_ENV.exists():
         lineas = [l for l in RUTA_ENV.read_text(encoding="utf-8").splitlines()
-                  if not l.strip().startswith("ANTHROPIC_API_KEY=")]
-        lineas.append("ANTHROPIC_API_KEY=")
+                  if not l.strip().startswith(f"{clave}=")]
+        lineas.append(f"{clave}=")
         RUTA_ENV.write_text("\n".join(lineas).rstrip() + "\n", encoding="utf-8")
-    os.environ["ANTHROPIC_API_KEY"] = ""
+    os.environ[clave] = ""

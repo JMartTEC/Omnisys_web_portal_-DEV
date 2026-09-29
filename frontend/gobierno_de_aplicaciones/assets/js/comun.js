@@ -726,27 +726,44 @@ function _selloIA(color, texto, detalle) {
   prov.hidden = false;
 }
 
+function _nombreProveedor(proveedor) {
+  if (proveedor === "ollama") return "Modo local";
+  if (proveedor === "gemini") return "Gemini API";
+  return "Claude API";
+}
+
+function _colorSegunProveedor(proveedor, ok) {
+  // Ollama (modo local, solo desarrollo): naranja mientras responda bien;
+  // solo se pone rojo si de verdad esta caido. El verde se reserva para los
+  // proveedores "de verdad" (Claude, Gemini) cuando contestan bien -- ambos
+  // funcionan igual de en-serio, uno de paga y otro gratis.
+  if (!ok) return "rojo";
+  return proveedor === "ollama" ? "naranja" : "verde";
+}
+
 async function pintarEstadoIA(proveedor) {
   const local = proveedor === "ollama";
-  const nombre = local ? "Modo local" : "Claude API";
+  const nombre = _nombreProveedor(proveedor);
   let cfg = null;
   try { cfg = await pedir("/gobierno_de_aplicaciones/api/config"); } catch { /* sigue */ }
-  if (!local && cfg && !cfg.tiene_llave) {
-    _selloIA("rojo", `${nombre} · sin configurar`,
-      "No hay API key guardada. Captúrala en «Configuración API key».");
-    return;
+  if (!local && cfg) {
+    const tieneLlave = proveedor === "gemini" ? cfg.tiene_llave_gemini : cfg.tiene_llave;
+    if (!tieneLlave) {
+      _selloIA("rojo", `${nombre} · sin configurar`,
+        "No hay API key guardada. Captúrala en «Configuración API key».");
+      return;
+    }
   }
   const previo = leerEstadoIA(proveedor);
   if (previo) {
-    _selloIA(previo.ok ? "verde" : "rojo", `${nombre} · ${previo.ok ? "en línea" : "sin conexión"}`, previo.mensaje);
+    _selloIA(_colorSegunProveedor(proveedor, previo.ok), `${nombre} · ${previo.ok ? "en línea" : "sin conexión"}`, previo.mensaje);
     return;
   }
   _selloIA("naranja", `${nombre} · comprobando…`, "Comprobando la conexión con el motor de IA.");
   try {
-    const r = await pedir("/gobierno_de_aplicaciones/api/config/probar",
-      json({ proveedor: local ? "local" : "claude" }));
+    const r = await pedir("/gobierno_de_aplicaciones/api/config/probar", json({ proveedor }));
     guardarEstadoIA({ proveedor, ok: !!r.ok, mensaje: r.mensaje || "" });
-    _selloIA(r.ok ? "verde" : "rojo", `${nombre} · ${r.ok ? "en línea" : "sin conexión"}`, r.mensaje);
+    _selloIA(_colorSegunProveedor(proveedor, r.ok), `${nombre} · ${r.ok ? "en línea" : "sin conexión"}`, r.mensaje);
   } catch (e) {
     _selloIA("rojo", `${nombre} · sin conexión`, e.message);
   }

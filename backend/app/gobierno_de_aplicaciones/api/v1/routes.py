@@ -38,7 +38,7 @@ from ...services import (almacen, apm, campos, conciliacion, deteccion,
                          exportador, extraccion, fuentes, identificacion,
                          llenado, lotes, metadata_validator, parsers,
                          taxonomy, tdd, tdd_nivel2)
-from ...services.ia import claude_service, ollama_service
+from ...services.ia import claude_service, ollama_service, gemini_service
 from ...services.parsers.base import DocumentoIlegible, FormatoNoSoportado
 
 
@@ -182,16 +182,24 @@ router = APIRouter()
 # ---------------------------------------------------------------------------
 MODOS_LOCALES = {"local", "gratis", "ollama", "offline"}
 MODOS_API = {"claude", "anthropic", "api"}
+MODOS_GEMINI = {"gemini", "google"}
 
 
 def _proveedor():
+    """Orden automatico cuando AI_MODO no fuerza uno: Claude (si hay llave)
+    > Gemini (gratis, si hay llave) > Ollama (gratis, local, solo desarrollo
+    -- necesita la maquina corriendo, por eso es el ultimo respaldo)."""
     modo = (os.getenv("AI_MODO") or "").strip().lower()
     if modo in MODOS_LOCALES:
         return "ollama", ollama_service.clasificar
     if modo in MODOS_API:
         return "claude", claude_service.clasificar
+    if modo in MODOS_GEMINI:
+        return "gemini", gemini_service.clasificar
     if os.getenv("ANTHROPIC_API_KEY"):
         return "claude", claude_service.clasificar
+    if os.getenv("GEMINI_API_KEY"):
+        return "gemini", gemini_service.clasificar
     return "ollama", ollama_service.clasificar
 
 
@@ -1607,8 +1615,15 @@ def config_guardar(payload: dict = Body(...)):
 
 @router.post("/api/config/borrar-llave")
 def config_borrar_llave():
-    configuracion.borrar_llave()
-    log.info("API key eliminada del .env")
+    configuracion.borrar_llave("ANTHROPIC_API_KEY")
+    log.info("API key de Claude eliminada del .env")
+    return {"ok": True, "estado": configuracion.estado()}
+
+
+@router.post("/api/config/borrar-llave-gemini")
+def config_borrar_llave_gemini():
+    configuracion.borrar_llave("GEMINI_API_KEY")
+    log.info("API key de Gemini eliminada del .env")
     return {"ok": True, "estado": configuracion.estado()}
 
 
@@ -1617,10 +1632,18 @@ def config_probar(payload: dict = Body(...)):
     """Comprueba que el proveedor elegido responde, ANTES de gastar minutos
     en un lote. Devuelve un diagnostico accionable, no solo ok/error."""
     proveedor = str(payload.get("proveedor") or "").strip().lower()
-    if proveedor in MODOS_LOCALES or (not proveedor and not os.getenv("ANTHROPIC_API_KEY")):
+    if proveedor in MODOS_LOCALES or (
+        not proveedor and not os.getenv("ANTHROPIC_API_KEY") and not os.getenv("GEMINI_API_KEY")
+    ):
         ok, motivo = ollama_service.disponible()
         return {"ok": ok, "proveedor": "ollama",
                 "mensaje": "Ollama responde y el modelo esta descargado." if ok else motivo}
+
+    if proveedor in MODOS_GEMINI or (not proveedor and not os.getenv("ANTHROPIC_API_KEY")):
+        ok, motivo = gemini_service.disponible()
+        return {"ok": ok, "proveedor": "gemini",
+                "mensaje": (f"Gemini respondio correctamente con {gemini_service._modelo()}."
+                            if ok else motivo)}
 
     # --- prueba real contra la API de Anthropic ---
     if not os.getenv("ANTHROPIC_API_KEY"):

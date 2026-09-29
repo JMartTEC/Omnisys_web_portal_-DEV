@@ -55,6 +55,35 @@
     </button>
   </fieldset>
 
+  <!-- ---- Gemini API ---- -->
+  <fieldset class="grupo-config" id="grupo-gemini">
+    <legend>Gemini API (gratis)</legend>
+
+    <div class="campo">
+      <label for="cfg-key-gemini">
+        API key
+        <span class="etiqueta" id="estado-llave-gemini">sin llave</span>
+      </label>
+      <input type="password" id="cfg-key-gemini" spellcheck="false"
+             autocomplete="off" placeholder="AIza...">
+      <p class="nota">
+        Se consigue gratis, sin tarjeta, en
+        <b>aistudio.google.com/apikey</b>. Sirve como respaldo cuando no hay
+        llave de Claude: a diferencia del modo local, no necesita nada
+        corriendo en esta maquina. Déjala vacía para conservar la actual.
+      </p>
+    </div>
+
+    <div class="campo">
+      <label for="cfg-modelo-gemini">Modelo</label>
+      <select id="cfg-modelo-gemini"></select>
+    </div>
+
+    <button class="btn-texto peligro" id="btn-borrar-llave-gemini" type="button">
+      Eliminar la llave guardada
+    </button>
+  </fieldset>
+
   <!-- ---- Ollama ---- -->
   <fieldset class="grupo-config" id="grupo-ollama">
     <legend>Local (Ollama)</legend>

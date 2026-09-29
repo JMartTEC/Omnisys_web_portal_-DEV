@@ -29,14 +29,32 @@ function pintarConfig(c) {
     $("cfg-key").placeholder = "sk-ant-api03-...";
   }
 
+  $("cfg-modelo-gemini").innerHTML = (c.modelos_gemini || []).map((m) =>
+    `<option${m === c.gemini_model ? " selected" : ""}>${esc(m)}</option>`).join("");
+
+  $("cfg-key-gemini").value = "";
+  const marcaGemini = $("estado-llave-gemini");
+  if (c.tiene_llave_gemini) {
+    marcaGemini.textContent = `guardada · ${c.llave_gemini_enmascarada}`;
+    marcaGemini.className = "etiqueta ok-chip";
+    $("cfg-key-gemini").placeholder = "Déjalo vacío para conservar la actual";
+  } else {
+    marcaGemini.textContent = "sin llave";
+    marcaGemini.className = "etiqueta aviso-chip";
+    $("cfg-key-gemini").placeholder = "AIza...";
+  }
+
   alternarGrupos();
 }
 
 function alternarGrupos() {
   const modo = $("cfg-modo").value;
-  const usaClaude = modo === "claude" || modo === "";
-  const usaLocal = modo !== "claude";
+  const auto = modo === "";
+  const usaClaude = modo === "claude" || auto;
+  const usaGemini = modo === "gemini" || auto;
+  const usaLocal = modo === "local" || auto;
   $("grupo-claude").classList.toggle("apagado", !usaClaude);
+  $("grupo-gemini").classList.toggle("apagado", !usaGemini);
   $("grupo-ollama").classList.toggle("apagado", !usaLocal);
 }
 
@@ -54,6 +72,8 @@ function cuerpoConfig() {
     anthropic_api_key: $("cfg-key").value,
     anthropic_workspace_id: $("cfg-workspace").value,
     anthropic_model: $("cfg-modelo-claude").value,
+    gemini_api_key: $("cfg-key-gemini").value,
+    gemini_model: $("cfg-modelo-gemini").value,
     ollama_model: $("cfg-modelo-ollama").value,
     ollama_host: $("cfg-host").value,
     ollama_max_chars: $("cfg-maxchars").value,
@@ -99,6 +119,18 @@ $("btn-borrar-llave").addEventListener("click", async () => {
     pintarConfig(r.estado);
     guardarEstadoIA(null);
     mensajeConfig("La llave se eliminó del .env.", false);
+  } catch (e) {
+    mensajeConfig(e.message, true);
+  }
+});
+
+$("btn-borrar-llave-gemini").addEventListener("click", async () => {
+  mensajeConfig("", false);
+  try {
+    const r = await pedir("/gobierno_de_aplicaciones/api/config/borrar-llave-gemini", { method: "POST" });
+    pintarConfig(r.estado);
+    guardarEstadoIA(null);
+    mensajeConfig("La llave de Gemini se eliminó del .env.", false);
   } catch (e) {
     mensajeConfig(e.message, true);
   }
