@@ -35,8 +35,8 @@ services:
       - key: LLM_PROVIDER
         value: extractive
       # --- Gobierno de Aplicaciones (Portal APM TEC, en /gobierno_de_aplicaciones/) ---
-      - key: AI_MODO                # claude: la API key la captura cada usuario en el portal
-        value: claude
+      # AI_MODO sin valor = automatico: Claude (si el usuario puso su llave en
+      # Configuracion) > Gemini (si puso esa llave) > Ollama (solo desarrollo local).
       # Descomentar al habilitar el LLM institucional (valores secretos: sync false = se capturan en el dashboard)
       # - key: LLM_API_KEY
       #   sync: false
