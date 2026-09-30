@@ -103,19 +103,35 @@ def enmascarar(valor: str) -> str:
     return f"{valor[:12]}…{valor[-4:]}"
 
 
+def _efectivo(env: dict[str, str], clave: str, defecto: str = "") -> str:
+    """El valor que en verdad esta usando el proceso ahora mismo.
+
+    El .env manda si algo se guardo ahi desde esta pantalla; si no, se cae a
+    la variable de entorno real del sistema -- por ejemplo la que se puso a
+    mano en el dashboard de Render, que nunca pasa por este archivo -- y solo
+    al final el valor por defecto. Sin esto la pantalla podia decir "sin
+    configurar" aunque el proceso ya tuviera la llave y la estuviera usando
+    de verdad para clasificar documentos: exactamente lo que pasaba en
+    Render, donde el .env se reinicia vacio en cada despliegue pero la
+    variable de entorno del dashboard sigue ahi."""
+    if env.get(clave):
+        return env[clave]
+    return os.environ.get(clave, defecto)
+
+
 def estado() -> dict:
     """Lo que ve la pantalla. La llave va ENMASCARADA, nunca completa."""
     env = leer_env()
-    llave = env.get("ANTHROPIC_API_KEY", "")
-    llave_gemini = env.get("GEMINI_API_KEY", "")
+    llave = _efectivo(env, "ANTHROPIC_API_KEY")
+    llave_gemini = _efectivo(env, "GEMINI_API_KEY")
     return {
-        "ai_modo": env.get("AI_MODO", DEFECTOS["AI_MODO"]),
-        "anthropic_model": env.get("ANTHROPIC_MODEL", DEFECTOS["ANTHROPIC_MODEL"]),
-        "anthropic_workspace_id": env.get("ANTHROPIC_WORKSPACE_ID", ""),
-        "gemini_model": env.get("GEMINI_MODEL", DEFECTOS["GEMINI_MODEL"]),
-        "ollama_model": env.get("OLLAMA_MODEL", DEFECTOS["OLLAMA_MODEL"]),
-        "ollama_host": env.get("OLLAMA_HOST", DEFECTOS["OLLAMA_HOST"]),
-        "ollama_max_chars": env.get("OLLAMA_MAX_CHARS", DEFECTOS["OLLAMA_MAX_CHARS"]),
+        "ai_modo": _efectivo(env, "AI_MODO", DEFECTOS["AI_MODO"]),
+        "anthropic_model": _efectivo(env, "ANTHROPIC_MODEL", DEFECTOS["ANTHROPIC_MODEL"]),
+        "anthropic_workspace_id": _efectivo(env, "ANTHROPIC_WORKSPACE_ID", ""),
+        "gemini_model": _efectivo(env, "GEMINI_MODEL", DEFECTOS["GEMINI_MODEL"]),
+        "ollama_model": _efectivo(env, "OLLAMA_MODEL", DEFECTOS["OLLAMA_MODEL"]),
+        "ollama_host": _efectivo(env, "OLLAMA_HOST", DEFECTOS["OLLAMA_HOST"]),
+        "ollama_max_chars": _efectivo(env, "OLLAMA_MAX_CHARS", DEFECTOS["OLLAMA_MAX_CHARS"]),
         # --- sobre las llaves, solo metadatos ---
         "tiene_llave": bool(llave),
         "llave_enmascarada": enmascarar(llave),
