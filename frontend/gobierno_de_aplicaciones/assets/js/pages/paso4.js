@@ -49,12 +49,11 @@ function pintarOmitidos() {
     tarjeta.innerHTML = `
       <div class="omitido-igual">
         <div class="omitido-igual-nombre"><code>${esc(igual.nombre)}</code></div>
-        ${igual.fecha ? `<div class="omitido-igual-fecha">${esc(igual.fecha)}</div>` : ""}
-        <p class="omitido-igual-leyenda">Este archivo es igual al que está en el sistema.</p>
+        <p class="omitido-igual-leyenda">Documento escaneado anteriormente${igual.fecha ? ` el ${esc(igual.fecha)}` : ""}.</p>
         <div class="omitido-igual-acciones">
           <button class="btn btn-sec" data-forzar-omitido type="button"
-                  ${igual.ruta ? "" : "disabled title=\"Se subió desde el navegador: vuelve a Inicio y súbelo de nuevo para forzar la revisión\""}>
-            Pasar solo para revisión</button>
+                  ${igual.ruta ? "" : "disabled title=\"Se subió desde el navegador: vuelve a Inicio y súbelo de nuevo para volver a escanear con IA\""}>
+            Volver a escanear con IA</button>
           <button class="btn btn-sec" data-volver-inicio-omitido type="button">Volver a inicio</button>
         </div>
       </div>`;
