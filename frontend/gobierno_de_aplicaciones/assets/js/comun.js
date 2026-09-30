@@ -265,6 +265,13 @@ function limpiarEstadoAsistente() {
   ["modo", "ruta", "rutaApm", "rutaApmAuto", "recursivo", "escribir",
    "loteId", "indice", "alcanzado", "avisoInicio"]
     .forEach((k) => Estado.borrar(k));
+  // Tambien el respaldo de sessionStorage (ver guardarSesion/cargarSesion):
+  // si no se limpia aqui, un "Inicio" despues de que el servidor se
+  // reinicio podria revivir por accidente el documento anterior.
+  for (let i = sessionStorage.length - 1; i >= 0; i--) {
+    const clave = sessionStorage.key(i);
+    if (clave && clave.startsWith("resp.")) sessionStorage.removeItem(clave);
+  }
   fetch("/gobierno_de_aplicaciones/api/sesion-limpiar", { method: "POST" }).catch(() => {});
 }
 
@@ -276,23 +283,67 @@ function limpiarEstadoAsistente() {
    documento y sus diagramas en base64 -- se guarda del lado del servidor
    (ver sesion.py) en vez de en sessionStorage, para no pelear con el limite
    de tamaño del navegador. Es en memoria del proceso, igual que los lotes:
-   no persiste si el servidor se reinicia. */
+   no persiste si el servidor se reinicia.
+
+   En un hosting como Render (plan gratuito, sin disco persistente) el
+   servidor SI se reinicia solo mientras trabajas: el servicio se duerme a
+   los ~15 min sin trafico y al despertar es un proceso nuevo, sin nada de
+   esta memoria. Antes eso tiraba al usuario a un "Cannot read properties of
+   null" a medio asistente. Como respaldo (no como almacen principal) se
+   guarda ademas una copia en sessionStorage del navegador -- eso si
+   sobrevive porque vive en la pestaña, no en el servidor -- y si el
+   servidor contesta 404 (ya no lo tiene) se recupera de ahi y se vuelve a
+   mandar al servidor para que el resto del flujo siga igual. Si el
+   documento es tan grande que no cabe en sessionStorage, guardarlo ahi
+   simplemente se ignora (try/catch) y el comportamiento es el mismo que
+   antes de este cambio: no se pierde nada que ya funcionara, se gana
+   recuperacion para el caso comun. */
+function respaldoLocal(clave, valor) {
+  try { sessionStorage.setItem(`resp.${clave}`, JSON.stringify(valor)); } catch { /* cupo lleno o dato no serializable: respaldo best-effort, se ignora */ }
+}
+function leerRespaldoLocal(clave) {
+  try {
+    const crudo = sessionStorage.getItem(`resp.${clave}`);
+    return crudo === null ? undefined : JSON.parse(crudo);
+  } catch { return undefined; }
+}
+
 async function guardarSesion(clave, valor) {
+  respaldoLocal(clave, valor);
   try { await pedir(`/gobierno_de_aplicaciones/api/sesion/${clave}`, json(valor)); } catch (e) { console.error(e); }
 }
 async function cargarSesion(clave) {
-  try { return await pedir(`/gobierno_de_aplicaciones/api/sesion/${clave}`); } catch { return null; }
+  try {
+    return await pedir(`/gobierno_de_aplicaciones/api/sesion/${clave}`);
+  } catch {
+    const respaldo = leerRespaldoLocal(clave);
+    if (respaldo === undefined) return null;
+    // El servidor se reinicio y perdio esto: lo revivimos ahi desde el
+    // respaldo del navegador para que el resto del asistente no note nada.
+    guardarSesion(clave, respaldo);
+    return respaldo;
+  }
 }
 
 /* Un lote (modo carpeta) trae VARIOS documentos -- cambiar el selector de
    "Documento" en el paso 4 no debe tirar lo que ya se corrigio en otro. Esto
    guarda/lee la edicion de UN documento del lote, por indice, aparte del
-   resultado original que ya vive en lotes.py. */
+   resultado original que ya vive en lotes.py. Mismo respaldo en
+   sessionStorage que arriba, por la misma razon (Render puede reiniciar el
+   proceso a medio asistente). */
 async function guardarItemLoteSesion(loteId, indice, item) {
+  respaldoLocal(`lote.${loteId}.${indice}`, item);
   try { await pedir(`/gobierno_de_aplicaciones/api/sesion/lote/${loteId}/${indice}`, json(item)); } catch (e) { console.error(e); }
 }
 async function cargarItemLoteSesion(loteId, indice) {
-  try { return await pedir(`/gobierno_de_aplicaciones/api/sesion/lote/${loteId}/${indice}`); } catch { return null; }
+  try {
+    return await pedir(`/gobierno_de_aplicaciones/api/sesion/lote/${loteId}/${indice}`);
+  } catch {
+    const respaldo = leerRespaldoLocal(`lote.${loteId}.${indice}`);
+    if (respaldo === undefined) return null;
+    guardarItemLoteSesion(loteId, indice, respaldo);
+    return respaldo;
+  }
 }
 
 /* ---------- el "resultado" del analisis (paso 3 -> 4 -> 5 -> 6 -> 7) ------
