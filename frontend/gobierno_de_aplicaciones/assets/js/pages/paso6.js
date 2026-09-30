@@ -51,6 +51,7 @@ function pintarCabeceraModulo6(activo) {
         <b>Llenado de TDD del aplicativo:</b> #${esc(info.numero)} · ${esc(info.nombre_aplicativo)}
         ${info.id_habilitador ? `<span class="etiqueta">${esc(info.id_habilitador)}</span>` : ""}
         <br>Comparado contra el TDD real: <b>${esc(p.documento_origen)}</b>.
+        · <a href="/gobierno_de_aplicaciones/api/referencia/descargar?tipo=tdd&numero=${encodeURIComponent(info.numero)}">Descargar copia del TDD de referencia</a>
       </p>`;
     } else if (hayFicha && p.es_propuesta) {
       el.innerHTML = `<p class="nota-aplicativo">

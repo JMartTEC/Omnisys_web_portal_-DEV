@@ -66,6 +66,20 @@ CARPETA_REFERENCIA_TDD = CARPETA_DATOS / "referencia" / "TDD"
 # no mezclar los archivos originales con las copias que la app mantiene.
 CARPETA_REFERENCIA_TDD2 = CARPETA_DATOS / "referencia" / "tdd_nivel2"
 CARPETA_REFERENCIA_TDD2_ESTABLE = CARPETA_REFERENCIA_TDD2 / "_estable"
+
+
+# El archivo de referencia para identificar a que aplicativo pertenece un
+# documento de Inicio SIEMPRE es el APM ya sembrado en esta instalacion (la
+# copia estable de arriba, CARPETA_REFERENCIA_APM) -- nunca la ruta que el
+# navegador venga recordando de sesiones viejas, que puede apuntar a una
+# carpeta que ya no existe. La persona no tiene que volver a subir ni a
+# seleccionar nada: si ya se sembro un APM alguna vez, esta funcion siempre
+# lo encuentra solo.
+def _ruta_apm_sembrada() -> str:
+    try:
+        return str(next(CARPETA_REFERENCIA_APM.glob("apm_referencia.*")))
+    except StopIteration:
+        return ""
 # El front del Portal APM (assets/, _layout.html y pantallas/) vive junto al del
 # Portal GD 360, en frontend/gobierno_de_aplicaciones/ -- misma estructura que el
 # resto del repo: la interfaz en frontend/, la logica de servidor en backend/.
@@ -310,9 +324,10 @@ def _sembrar_tdd_desde_subida(ruta_temporal: str, nombre_origen: str,
         return {"ok": False, "motivo": f"no se pudo leer el TDD subido: {exc}"}
 
     numero, nombre_app = "", ""
-    if ruta_apm_actual:
+    ruta_apm_efectiva = _ruta_apm_sembrada() or ruta_apm_actual
+    if ruta_apm_efectiva:
         try:
-            libro_actual = _libro(ruta_apm_actual)
+            libro_actual = _libro(ruta_apm_efectiva)
             aplicacion = libro_actual.aplicacion(
                 numero=doc_tdd.numero_apm, id_habilitador=doc_tdd.id_habilitador,
                 nombre=doc_tdd.nombre_archivo_pista)
@@ -355,9 +370,10 @@ def _sembrar_tdd2_desde_subida(ruta_temporal: str, nombre_origen: str,
                 "no el TDD de ningún aplicativo real"}
 
     numero, nombre_app = "", ""
-    if ruta_apm_actual:
+    ruta_apm_efectiva = _ruta_apm_sembrada() or ruta_apm_actual
+    if ruta_apm_efectiva:
         try:
-            libro_actual = _libro(ruta_apm_actual)
+            libro_actual = _libro(ruta_apm_efectiva)
             amarre = tdd_nivel2.identificar(doc_tdd2, libro_actual)
             if amarre.identificado:
                 numero, nombre_app = amarre.numero, amarre.nombre
@@ -1336,9 +1352,10 @@ def _clasificar_ruta(ruta: str, nombre: str,
     # libro real y permite comparar contra un aplicativo real) de paso 5/6
     # (que siempre funcionan, con o sin libro sembrado): son dos cosas
     # independientes a proposito, y una no deberia bloquear a la otra.
-    if ruta_apm:
+    ruta_apm_efectiva = _ruta_apm_sembrada() or ruta_apm
+    if ruta_apm_efectiva:
         try:
-            activo["_apm"] = _vincular_aplicativo(Path(ruta), nombre, doc, texto, ruta_apm)
+            activo["_apm"] = _vincular_aplicativo(Path(ruta), nombre, doc, texto, ruta_apm_efectiva)
         except Exception:
             log.exception("no se pudo vincular el documento a un aplicativo")
             activo["_apm"] = {
@@ -1877,6 +1894,30 @@ def descargar_archivo(ruta: str):
         raise HTTPException(400, "Esa ruta no se puede descargar desde aquí.")
     if not p.is_file():
         raise HTTPException(404, "El archivo ya no existe.")
+    return FileResponse(str(p), filename=p.name)
+
+
+@router.get("/api/referencia/descargar")
+def descargar_referencia(tipo: str, numero: str = ""):
+    """Baja la copia de referencia que ya vive sembrada en datos/: el APM
+    (uno solo para toda la instalacion) o el TDD Nivel 2 de un aplicativo
+    puntual. No se sube ni se elige nada -- es la misma copia que el sistema
+    ya usa para identificar y comparar, tal cual esta ahorita."""
+    tipo = (tipo or "").strip().lower()
+    if tipo == "apm":
+        try:
+            p = next(CARPETA_REFERENCIA_APM.glob("apm_referencia.*"))
+        except StopIteration:
+            raise HTTPException(404, "Todavia no hay ningun APM sembrado en esta base.")
+    elif tipo == "tdd":
+        numero = (numero or "").strip()
+        if not numero:
+            raise HTTPException(400, "Hace falta el numero de aplicativo para bajar su TDD.")
+        p = CARPETA_REFERENCIA_TDD2_ESTABLE / f"{numero}.docx"
+        if not p.is_file():
+            raise HTTPException(404, "Todavia no hay ningun TDD sembrado para ese aplicativo.")
+    else:
+        raise HTTPException(400, "El tipo debe ser 'apm' o 'tdd'.")
     return FileResponse(str(p), filename=p.name)
 
 

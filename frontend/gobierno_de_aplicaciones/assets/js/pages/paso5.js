@@ -17,6 +17,7 @@ function pintarCabeceraModulo5(activo) {
     el.innerHTML = `<p class="nota-aplicativo">
       <b>Llenado de APM del aplicativo:</b> #${esc(info.numero)} · ${esc(info.nombre_aplicativo)}
       ${info.id_habilitador ? `<span class="etiqueta">${esc(info.id_habilitador)}</span>` : ""}
+      · <a href="/gobierno_de_aplicaciones/api/referencia/descargar?tipo=apm">Descargar copia del APM de referencia</a>
     </p>`;
     el.hidden = false;
     return;
