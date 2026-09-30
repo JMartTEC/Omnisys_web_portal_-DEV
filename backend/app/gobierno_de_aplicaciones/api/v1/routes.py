@@ -1251,8 +1251,13 @@ def _clasificar_ruta(ruta: str, nombre: str,
 
     papel = identificacion.clasificar_archivo(Path(ruta))
     if on_etapa:
+        # Si se esta forzando, de aqui en adelante se procesa igual que una
+        # fuente (el corte de abajo no se hace) -- por eso la pantalla en
+        # vivo tambien tiene que verlo como fuente, o se queda pintando
+        # "ya se reconoce como parte del sistema" y nunca pasa al paso 3.
         on_etapa("identificacion", {"estado": "ok", "tipo": papel.tipo,
-                                     "es_fuente": papel.es_fuente, "motivo": papel.motivo})
+                                     "es_fuente": papel.es_fuente or forzar,
+                                     "motivo": papel.motivo})
     if not papel.es_fuente and not forzar:
         raise DestinoExcluido(papel.motivo, papel.tipo)
 
@@ -3300,7 +3305,7 @@ def _responder_uno(ruta: str, nombre: str, ruta_origen: str, ruta_apm: str = "",
 
         return JSONResponse({
             "ok": True, "excluido": True, "tipo_excluido": exc.tipo,
-            "motivo": exc.motivo, "nombre": nombre,
+            "motivo": exc.motivo, "nombre": nombre, "ruta_origen": ruta_origen,
             "referencia_actualizada": bool(siembra and siembra.get("ok")),
             "referencia": siembra,
         })
@@ -3336,6 +3341,7 @@ def _responder_uno(ruta: str, nombre: str, ruta_origen: str, ruta_apm: str = "",
         "proveedor": proveedor,
         "activo": activo,
         "etapas": etapas,
+        "ruta_origen": ruta_origen,
         "markdown": exportador.a_markdown(
             activo, _texto_para_markdown(doc), ruta_origen),
         "nombre_sugerido": exportador.nombre_base(activo),
@@ -3440,9 +3446,10 @@ async def analizar_vivo_subir(file: UploadFile = File(...), ruta_apm: str = Form
     if len(contenido) > MAX_BYTES:
         raise HTTPException(400, f"El archivo excede {MAX_MB} MB.")
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix=Path(nombre).suffix) as tmp:
-        tmp.write(contenido)
-        temporal = tmp.name
+    CARPETA_SUBIDOS.mkdir(parents=True, exist_ok=True)
+    destino = _nombre_libre(CARPETA_SUBIDOS, nombre)
+    destino.write_bytes(contenido)
+    temporal = str(destino)
     del contenido
 
     analisis = progreso_vivo.crear()
@@ -3450,14 +3457,9 @@ async def analizar_vivo_subir(file: UploadFile = File(...), ruta_apm: str = Form
     forzar_bool = str(forzar or "").strip().lower() in ("1", "true", "si", "sí")
 
     def trabajo(a: progreso_vivo.Analisis) -> None:
-        try:
-            _ejecutar_para_vivo(a, temporal, nombre, nombre, ruta_apm_limpia, forzar_bool)
-        finally:
-            if os.path.exists(temporal):
-                try:
-                    os.remove(temporal)
-                except OSError:
-                    log.warning("no se pudo eliminar el temporal")
+        # No se borra: se queda en CARPETA_SUBIDOS para que "Volver a escanear
+        # con IA" (Revisión y Vectorización) lo pueda releer despues.
+        _ejecutar_para_vivo(a, temporal, nombre, temporal, ruta_apm_limpia, forzar_bool)
 
     progreso_vivo.lanzar(analisis, trabajo)
     return {"ok": True, "id": analisis.id}

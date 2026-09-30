@@ -184,7 +184,7 @@ async function guardarExcluidoYContinuar(r) {
     modoLote: false, loteId: null, nombres: [],
     activos: [],
     activosOmitidos: [r.referencia_actualizada
-      ? { nombre: r.nombre, motivo, mismoEnSistema: true, fecha, ruta: Estado.get("ruta") }
+      ? { nombre: r.nombre, motivo, mismoEnSistema: true, fecha, ruta: r.ruta_origen || Estado.get("ruta") }
       : { nombre: r.nombre, motivo }],
     indice: 0,
   };
@@ -206,7 +206,7 @@ async function guardarClasificadoYContinuar(r) {
     activos: [{
       nombre: r.activo._documento?.nombre_archivo || Estado.get("ruta"),
       activo: r.activo, texto: "", markdown: r.markdown,
-      base: r.nombre_sugerido, ruta: Estado.get("ruta"),
+      base: r.nombre_sugerido, ruta: r.ruta_origen || Estado.get("ruta"),
     }],
     activosOmitidos: [],
     indice: 0,

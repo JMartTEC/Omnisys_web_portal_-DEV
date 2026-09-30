@@ -51,8 +51,7 @@ function pintarOmitidos() {
         <div class="omitido-igual-nombre"><code>${esc(igual.nombre)}</code></div>
         <p class="omitido-igual-leyenda">Documento escaneado anteriormente${igual.fecha ? ` el ${esc(igual.fecha)}` : ""}.</p>
         <div class="omitido-igual-acciones">
-          <button class="btn btn-sec" data-forzar-omitido type="button"
-                  ${igual.ruta ? "" : "disabled title=\"Se subió desde el navegador: vuelve a Inicio y súbelo de nuevo para volver a escanear con IA\""}>
+          <button class="btn btn-sec" data-forzar-omitido type="button">
             Volver a escanear con IA</button>
           <button class="btn btn-sec" data-volver-inicio-omitido type="button">Volver a inicio</button>
         </div>
@@ -75,24 +74,22 @@ function pintarOmitidos() {
 
 async function forzarRevision(ruta) {
   mostrarError(4, "");
+  if (!ruta) {
+    return mostrarError(4, "Este documento no tiene una ruta en disco que releer.");
+  }
   try {
-    const r = await pedir("/gobierno_de_aplicaciones/api/analyze-ruta", json({ ruta, ruta_apm: Estado.get("rutaApm"), forzar: true }));
-    if (r.excluido) {
-      // Sigue siendo el propio APM/TDD incluso forzado: no hay nada más que hacer.
-      return mostrarError(4, "Este documento es el propio APM o un TDD -- no se puede revisar como fuente.");
-    }
-    resultado = {
-      modoLote: false, loteId: null, nombres: [],
-      activos: [{
-        nombre: r.activo._documento?.nombre_archivo || ruta,
-        activo: r.activo, texto: "", markdown: r.markdown,
-        base: r.nombre_sugerido, ruta,
-      }],
-      activosOmitidos: [], indice: 0,
-    };
-    await guardarResultadoSesion(resultado);
+    // Igual que en Inicio: arranca el analisis en vivo y entra al paso 2, que
+    // pasa solo al paso 3 en cuanto empieza a clasificar con IA -- vuelve a
+    // pasar por todo el analisis, no solo se recarga la pantalla.
+    Estado.set("ruta", ruta);
+    Estado.set("modo", "archivo");
+    const r = await pedir("/gobierno_de_aplicaciones/api/analizar-vivo",
+      json({ ruta, ruta_apm: Estado.get("rutaApm"), forzar: true }));
+    Estado.set("vivoId", r.id);
+    Estado.set("loteId", "");
     Estado.set("indice", 0);
-    location.reload();
+    Estado.set("alcanzado", 2);
+    location.href = "/gobierno_de_aplicaciones/paso/2";
   } catch (e) {
     mostrarError(4, e.message);
   }

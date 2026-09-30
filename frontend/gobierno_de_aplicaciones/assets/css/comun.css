@@ -395,10 +395,10 @@ textarea { resize: vertical; }
 
 /* --- propuesto: hay candidato pero todavia no se aplica. La casilla se ve
        vacia con el valor de marca de agua: eso es el "antes". --- */
-.campo-llenado.est-propuesto { background: #fff; border-color: #c3cad8;
+.campo-llenado.est-propuesto { background: #eceef2; border-color: #7b8598;
                                border-style: dashed; }
-.campo-llenado.est-propuesto .marca-estado { color: #6b7488; }
-.campo-llenado.est-propuesto input::placeholder { color: #7b8398; font-style: italic; }
+.campo-llenado.est-propuesto .marca-estado { color: #454e60; }
+.campo-llenado.est-propuesto input::placeholder { color: #4f596c; font-style: italic; }
 
 /* --- verde: ya hay un dato real, con respaldo (lo trae el documento o ya
        estaba en el APM) --- */
@@ -862,7 +862,7 @@ input[type=text] { font-family: "IBM Plex Mono", ui-monospace, Consolas, monospa
 .campo-llenado.est-referenciado, .campo-llenado.est-diferente { border-left-color: #d08a12; }
 .campo-llenado.est-faltante { border-left-color: #c00e14; }
 .campo-llenado.est-manual { border-left-color: #1b3068; }
-.campo-llenado.est-propuesto { border-left-style: dashed; }
+.campo-llenado.est-propuesto { border-left-style: dashed; border-left-color: #7b8598; }
 
 /* --- buscador de «APM y TDD» --- */
 .buscador { display: grid; gap: 6px; margin: 4px 0 16px; max-width: 520px; }
