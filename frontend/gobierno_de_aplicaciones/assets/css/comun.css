@@ -535,6 +535,17 @@ tr.fila-alerta td { background: #fef7f6; }
 .pil.e-rojo  { background: #fdecea; color: var(--error); border: 1px solid #f0b4ae; }
 .pil.e-gris  { background: #eef0f4; color: #5b6478; border: 1px solid #ccd2dd; }
 
+/* --- sugerencia de la IA en "Comparar TDD Nivel 2": una pista, no una
+   decision -- por eso el tono es discreto (mismo azul que .pil.e-prop) y el
+   boton se ve como texto, no como una accion primaria. --- */
+.sugerencia-ia { background: var(--azul-claro); border: 1px solid #a9c3e8;
+    border-radius: 8px; padding: 8px 12px; color: var(--azul-osc); }
+.sugerencia-ia b { color: var(--azul); }
+.btn-link { border: none; background: none; padding: 0; margin-left: 6px;
+    color: var(--azul-link); text-decoration: underline; cursor: pointer;
+    font-size: inherit; font-family: inherit; }
+.btn-link:hover { color: var(--azul); }
+
 /* --- el antes contra el después, uno debajo del otro para poder leerlos --- */
 .comparacion { display: grid; gap: 6px; margin: 8px 0; }
 /* minmax(0,...) en las dos columnas: sin eso, un nombre de archivo largo no se

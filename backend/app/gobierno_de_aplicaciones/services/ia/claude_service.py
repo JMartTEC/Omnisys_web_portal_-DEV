@@ -369,3 +369,105 @@ def clasificar(texto_doc: str, candidatos: dict, imagenes: list[dict]) -> dict:
 
     datos["_uso"] = uso
     return datos
+
+
+# ---------------------------------------------------------------------------
+# Sugerencias para conflictos de "Comparar TDD Nivel 2"
+# ---------------------------------------------------------------------------
+# Distinto de `clasificar`: aqui no se llena nada. La pantalla de TDD Nivel 2
+# sigue la regla del proyecto de nunca resolver un desacuerdo sola (ver
+# conciliacion.py y tdd_nivel2.py) -- esto solo adelanta la lectura. Para cada
+# conflicto entre la referencia ya sembrada y el documento recien subido, se le
+# pide a Claude que sugiera cual de los dos valores parece mas correcto y por
+# que, pero la decision -- el clic que de verdad cambia algo -- la sigue dando
+# una persona, campo por campo, exactamente igual que sin esta funcion. Si la
+# IA no esta configurada o la llamada falla, la pantalla se queda funcionando
+# en modo totalmente manual, como siempre: esto es un adelanto, no un requisito.
+
+_SYSTEM_SUGERENCIA_TDD2 = """Ayudas a decidir conflictos de datos entre dos versiones de un TDD Nivel 2
+(Gobierno de Aplicativos) del Tecnologico de Monterrey: la referencia ya
+sembrada de un aplicativo, y un documento TDD Nivel 2 que alguien acaba de
+subir para ese mismo aplicativo.
+
+Para cada conflicto que se te da (la referencia dice una cosa, el documento
+subido dice otra), sugiere cual de los dos valores es mas probable que sea el
+correcto y por que -- normalmente un dato mas especifico, mas completo o mas
+reciente gana sobre uno vago, generico o claramente desactualizado. Si de
+verdad no hay ninguna senal para preferir uno sobre el otro, sugiere el del
+documento subido (es lo mas reciente que alguien capturo) y dilo asi en la
+justificacion.
+
+IMPORTANTE: tu sugerencia NUNCA se aplica sola -- una persona la lee y decide
+con su propio clic. No inventes un tercer valor que no sea ninguno de los dos
+que se te dieron: solo elige entre "referencia" o "documento".
+
+Devuelve EXCLUSIVAMENTE un objeto JSON valido, sin markdown, sin texto antes ni
+despues, con esta forma exacta:
+{"<clave>": {"eleccion": "referencia" | "documento", "justificacion": "..."}, ...}
+Una entrada por cada clave que se te dio. La justificacion es una sola frase
+corta, maximo 25 palabras."""
+
+
+def _bloque_conflictos_tdd2(conflictos: list[dict]) -> str:
+    lineas = []
+    for c in conflictos:
+        lineas.append(
+            f'- clave: "{c["clave"]}"\n'
+            f'  seccion: {c.get("grupo", "")}\n'
+            f'  campo: {c.get("etiqueta", "")}\n'
+            f'  valor en la referencia: {c.get("valor_referencia", "")!r}\n'
+            f'  valor en el documento subido: {c.get("valor_documento", "")!r}'
+        )
+    return "\n".join(lineas)
+
+
+def sugerir_tdd2(conflictos: list[dict]) -> dict:
+    """`conflictos` = [{clave, grupo, etiqueta, valor_referencia, valor_documento}].
+
+    Devuelve {clave: {"eleccion": "referencia"|"documento", "justificacion": str}},
+    solo para las claves donde la respuesta vino bien formada -- una sugerencia
+    mal formada se descarta en silencio en vez de romper la pantalla.
+    """
+    if not conflictos:
+        return {}
+
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise RuntimeError(
+            "Falta ANTHROPIC_API_KEY. Copia .env.example a .env y coloca tu token."
+        )
+
+    workspace = _workspace()
+    modelo = _modelo()
+    cabeceras = {"anthropic-workspace-id": workspace} if workspace else None
+    client = anthropic.Anthropic(api_key=api_key, default_headers=cabeceras,
+                                 timeout=120.0, max_retries=2)
+
+    contenido = (f"Conflictos a decidir:\n\n{_bloque_conflictos_tdd2(conflictos)}\n\n"
+                 f"Devuelve el JSON con una entrada por cada clave listada arriba.")
+
+    try:
+        with client.messages.stream(
+            model=modelo, max_tokens=4000, system=_SYSTEM_SUGERENCIA_TDD2,
+            messages=[{"role": "user", "content": contenido}],
+        ) as stream:
+            respuesta = stream.get_final_message()
+    except anthropic.BadRequestError as exc:
+        if "workspace" in str(exc).lower() and not workspace:
+            raise RuntimeError(
+                "Tu token esta ligado a una identidad y la API exige saber en que "
+                "workspace actua. Agrega ANTHROPIC_WORKSPACE_ID=<id> al .env."
+            ) from None
+        raise
+
+    texto = "".join(b.text for b in respuesta.content if b.type == "text")
+    datos = _extraer_json(texto)
+
+    limpio: dict[str, dict] = {}
+    for clave, v in (datos or {}).items():
+        if isinstance(v, dict) and v.get("eleccion") in ("referencia", "documento"):
+            limpio[clave] = {
+                "eleccion": v["eleccion"],
+                "justificacion": str(v.get("justificacion", ""))[:300],
+            }
+    return limpio

@@ -2501,6 +2501,34 @@ def tdd2_comparar(payload: dict = Body(...)):
     }
 
 
+@router.post("/api/tdd2/sugerir")
+def tdd2_sugerir(payload: dict = Body(...)):
+    """Para los conflictos de una comparacion de TDD Nivel 2 ya hecha
+    (/api/tdd2/comparar), le pide a la IA una sugerencia de cual valor usar en
+    cada uno -- referencia o documento subido. Nunca decide ni escribe nada:
+    solo adelanta la lectura para que la persona no tenga que leer cada
+    conflicto a ciegas. La decision, con su propio clic, sigue siendo suya.
+
+    Si no hay proveedor de IA configurado o la llamada falla, se regresa sin
+    sugerencias -- la pantalla sigue funcionando en modo totalmente manual,
+    exactamente como hasta ahora."""
+    propuestas = payload.get("propuestas") or []
+    conflictos = [
+        {"clave": p["clave"], "grupo": p.get("grupo", ""), "etiqueta": p.get("etiqueta", ""),
+         "valor_referencia": p.get("valor_actual", ""),
+         "valor_documento": (p.get("candidatos") or [{}])[0].get("valor", "")}
+        for p in propuestas if p.get("estado") == conciliacion.CONFLICTO_APM
+    ]
+    if not conflictos:
+        return {"ok": True, "sugerencias": {}}
+    try:
+        sugerencias = claude_service.sugerir_tdd2(conflictos)
+    except Exception as exc:
+        log.warning("no se pudieron obtener sugerencias de IA para TDD2: %s", exc)
+        return {"ok": True, "sugerencias": {}, "aviso": str(exc)}
+    return {"ok": True, "sugerencias": sugerencias}
+
+
 @router.post("/api/tdd2/guardar")
 def tdd2_guardar(payload: dict = Body(...)):
     """Escribe lo que la persona decidio como la version NUEVA de la

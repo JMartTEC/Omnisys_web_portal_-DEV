@@ -21,6 +21,9 @@ const T2 = {
   propuestas: [],
   decisiones: {},         // clave (seccion::campo) -> valor escogido
   rutaDocSubido: "",
+  sugerencias: {},         // clave -> {eleccion: "referencia"|"documento", justificacion}
+                           // -- lo que la IA propone; nunca se aplica sola, solo
+                           // adelanta lectura. Ver pedirSugerenciasTdd2().
 };
 
 function errT2(mensaje) {
@@ -238,6 +241,24 @@ function pintarResultadoTdd2(r, rutaDoc) {
   caja.hidden = false;
   $("tdd2-btn-guardar").addEventListener("click", guardarTdd2);
   pintarPropuestasTdd2();
+  pedirSugerenciasTdd2();
+}
+
+/* IA propone, la persona decide: para cada conflicto (la referencia dice una
+   cosa, el documento subido dice otra) le pide a Claude cual le parece mas
+   acertado y por que. Nunca se aplica sola -- solo se pinta como pista junto
+   a las dos opciones, con un boton para adoptarla que dispara el mismo
+   cambio que elegirla a mano en el <select>. Si no hay IA configurada o la
+   llamada falla, la pantalla sigue exactamente igual que antes: 100% manual. */
+async function pedirSugerenciasTdd2() {
+  const hayConflictos = T2.propuestas.some((p) => p.estado === "conflicto_apm");
+  if (!hayConflictos) return;
+  try {
+    const r = await pedir("/gobierno_de_aplicaciones/api/tdd2/sugerir",
+      json({ propuestas: T2.propuestas }));
+    T2.sugerencias = r.sugerencias || {};
+    if (Object.keys(T2.sugerencias).length) pintarPropuestasTdd2();
+  } catch { /* la sugerencia es un adelanto opcional: si falla, sin pista */ }
 }
 
 function pintarPropuestasTdd2() {
@@ -258,6 +279,16 @@ function pintarPropuestasTdd2() {
     if (p.valor_actual) opciones.push({ v: p.valor_actual, t: `dejar el de la referencia: «${p.valor_actual}»` });
     for (const c of p.candidatos) opciones.push({ v: c.valor, t: `«${c.valor}» — el documento subido` });
 
+    // IA propone, tu decides: si hay una sugerencia para este conflicto, se
+    // traduce a uno de los dos valores de arriba -- nunca a un tercero -- y se
+    // pinta como pista con un boton para adoptarla. El clic en el boton hace
+    // exactamente lo mismo que elegirla a mano en el <select> de abajo.
+    const sug = p.estado === "conflicto_apm" ? T2.sugerencias[p.clave] : null;
+    const valorSugerido = sug
+      ? (sug.eleccion === "referencia" ? p.valor_actual : (p.candidatos[0] || {}).valor)
+      : null;
+    const sugerenciaYaElegida = sug && T2.decisiones[p.clave] === valorSugerido;
+
     return `<article class="campo-conc ${est.clase} ${decidido ? "decidido" : ""}">
       <header>
         <b>${esc(p.etiqueta)}</b>
@@ -274,6 +305,14 @@ function pintarPropuestasTdd2() {
              <span class="val">${esc(c.valor)}</span>
              <span class="evidencia">${esc(c.evidencia)}</span></div>`).join("")}
       </div>
+      ${sug && valorSugerido ? `<p class="nota sugerencia-ia">
+             <b>🤖 La IA sugiere</b> usar ${sug.eleccion === "referencia" ? "el de la referencia" : "el del documento subido"}
+             — ${esc(sug.justificacion)}
+             ${sugerenciaYaElegida
+               ? `<span class="pil e-ok">adoptada</span>`
+               : `<button type="button" class="btn-link" data-usar-sugerencia="${esc(p.clave)}"
+                        data-valor-sugerido="${esc(valorSugerido)}">Usar esta sugerencia</button>`}
+           </p>` : ""}
       <div class="decidir">
         <label for="tdd2-dec-${i}">Qué se guarda en la referencia</label>
         <select id="tdd2-dec-${i}" data-clave="${esc(p.clave)}">
@@ -288,6 +327,14 @@ function pintarPropuestasTdd2() {
   lista.querySelectorAll("[data-clave]").forEach((el) =>
     el.addEventListener("change", () => {
       T2.decisiones[el.dataset.clave] = el.value === "__nada__" ? "" : el.value;
+      pintarPropuestasTdd2();
+      revisarCompuertaTdd2();
+    }));
+  lista.querySelectorAll("[data-usar-sugerencia]").forEach((el) =>
+    el.addEventListener("click", () => {
+      // Mismo camino que elegirla a mano: se guarda como decision de la
+      // persona (el clic que se acaba de dar), nunca se aplico sola antes de esto.
+      T2.decisiones[el.dataset.usarSugerencia] = el.dataset.valorSugerido;
       pintarPropuestasTdd2();
       revisarCompuertaTdd2();
     }));
