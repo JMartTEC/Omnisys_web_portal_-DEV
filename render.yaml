@@ -3,7 +3,7 @@
 services:
   # ------------------------------------------------------------------ Backend (FastAPI)
   - type: web
-    name: gd-rag-api
+    name: portal-go-tec360-api
     runtime: python
     rootDir: backend
     plan: free                      # cambiar a starter/standard para evitar el "sleep" del plan free
@@ -25,7 +25,7 @@ services:
       # Render solo entrega ahi el nombre interno (sin .onrender.com), lo que rompe
       # el CORS en cuanto Render le puso un sufijo al nombre del otro servicio
       # (choque de nombre global). sync:false => se captura a mano en el dashboard
-      # con el dominio COMPLETO del portal, ej: gd-portal-qv63.onrender.com (sin https://).
+      # con el dominio COMPLETO del portal, ej: portal-go-tec360.onrender.com (sin https://).
       - key: FRONTEND_HOST
         sync: false
       - key: CORS_ORIGINS
@@ -47,7 +47,7 @@ services:
 
   # ------------------------------------------------------------------ Frontend (HTML + Bootstrap)
   - type: web
-    name: gd-portal
+    name: portal-go-tec360
     runtime: static
     rootDir: frontend
     buildCommand: sh scripts/render-build.sh
@@ -58,7 +58,7 @@ services:
       # NO usar fromService/property:host aqui: solo entrega el nombre interno sin
       # dominio, lo que genero un env.js con una URL invalida ("Failed to fetch" al
       # iniciar sesion). sync:false => se captura a mano en el dashboard, ej:
-      # https://gd-rag-api-45up.onrender.com
+      # https://portal-go-tec360-api.onrender.com
       - key: API_BASE_URL
         sync: false
       - key: USE_MOCK
