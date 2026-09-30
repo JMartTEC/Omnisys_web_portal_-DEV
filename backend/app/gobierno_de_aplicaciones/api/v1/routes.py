@@ -2478,7 +2478,7 @@ def tdd2_referencia():
             tarjetas.append({
                 "numero": f["numero"], "id_habilitador": f.get("id_habilitador") or "",
                 "habilitador": f["nombre"],
-                "tdd2_nombre": (Path(ref["ruta_estable"]).stem + ".docx")
+                "tdd2_nombre": (_stem_de_ruta(ref["ruta_estable"]) + ".docx")
                     if ref and ref.get("ruta_estable") else None,
                 "campos_llenos": f.get("campos_llenos"),
                 "campos_totales": f.get("campos_totales"),
@@ -2538,7 +2538,7 @@ def tdd2_comparar(payload: dict = Body(...)):
                       "campos_con_dato": len(nuevo.campos_con_dato),
                       "campos_totales": len(nuevo.campos)},
         "hay_referencia_previa": referencia_doc is not None,
-        "referencia": ({"nombre": Path(ref["ruta_estable"]).name,
+        "referencia": ({"nombre": _nombre_de_ruta(ref["ruta_estable"]),
                         "actualizado_en": ref.get("actualizado_en")}
                        if referencia_doc is not None else None),
         "propuestas": salida,
@@ -2702,6 +2702,24 @@ def taxonomia():
 # TDD que se cargo de origen. Sin esto, la mayoria de los habilitadores
 # aparecian como "sin TDD" aunque su TDD si estuviera ahi, solo que nadie lo
 # habia subido todavia dentro del asistente.
+def _nombre_de_ruta(ruta: str) -> str:
+    """El nombre de archivo (sin carpetas) de una ruta guardada en la base,
+    sea cual sea el sistema operativo donde se escribio (Windows con "\\",
+    o Linux/Mac con "/") -- `Path(...).name` solo entiende el separador del
+    sistema operativo donde corre ESTE proceso: una ruta de Windows sembrada
+    en la compu local (p. ej. "C:\\Users\\...\\archivo.xlsx") se lee en el
+    servidor (Linux) como un solo nombre larguisimo en vez de partirse por
+    "\\", y esa ruta completa terminaba mostrandose en pantalla. Nunca debe
+    usarse la ruta completa de un archivo en la interfaz, solo su nombre."""
+    return re.split(r"[\\/]+", str(ruta or "").strip())[-1]
+
+
+def _stem_de_ruta(ruta: str) -> str:
+    """Como `_nombre_de_ruta`, pero sin la extension."""
+    nombre = _nombre_de_ruta(ruta)
+    return nombre.rsplit(".", 1)[0] if "." in nombre else nombre
+
+
 _RE_DOC_TDD_CON_VERSION = re.compile(r"^TDD_V(\d+)_(.+)$", re.IGNORECASE)
 _RE_DOC_TDD_SIN_VERSION = re.compile(r"^TDD_Tec__(.+)$", re.IGNORECASE)
 
@@ -2785,9 +2803,9 @@ def docs_referencia():
             except Exception:
                 ref_tdd2 = None
             if ref_tdd2 and ref_tdd2.get("origen_actual"):
-                tdd_nombre = Path(ref_tdd2["origen_actual"]).name
+                tdd_nombre = _nombre_de_ruta(ref_tdd2["origen_actual"])
             elif ref_tdd2 and ref_tdd2.get("ruta_estable"):
-                tdd_nombre = Path(ref_tdd2["ruta_estable"]).stem + ".docx"
+                tdd_nombre = _stem_de_ruta(ref_tdd2["ruta_estable"]) + ".docx"
             try:
                 progreso = BASE.progreso_tdd2(numero)
             except Exception:
@@ -2820,7 +2838,7 @@ def docs_referencia():
         except Exception:
             ref_apm = None
         if ref_apm and ref_apm.get("origen_actual"):
-            apm_nombre = Path(ref_apm["origen_actual"]).name
+            apm_nombre = _nombre_de_ruta(ref_apm["origen_actual"])
 
     return {"ok": True, "apm_nombre": apm_nombre, "habilitadores": tarjetas}
 
