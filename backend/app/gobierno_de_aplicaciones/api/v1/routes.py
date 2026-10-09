@@ -45,7 +45,10 @@ from ...services.parsers.base import DocumentoIlegible, FormatoNoSoportado
 # routes.py vive en backend/app/gobierno_de_aplicaciones/api/v1/: parents[4] es backend/.
 BASE_DIR = Path(__file__).resolve().parents[4]        # backend/
 MODULO_DIR = Path(__file__).resolve().parents[2]       # backend/app/gobierno_de_aplicaciones/
-CARPETA_DATOS = MODULO_DIR / "datos"
+# APM_DATOS_DIR: en Azure la carpeta del programa puede ser de solo lectura; ahi
+# la base de trabajo vive en una carpeta temporal y Cosmos es la que guarda todo.
+CARPETA_DATOS = Path(os.environ["APM_DATOS_DIR"]) if os.environ.get("APM_DATOS_DIR") \
+    else MODULO_DIR / "datos"
 # Los archivos que se suben por el navegador viven aqui mientras dura la
 # sesion de trabajo. Es carpeta desechable: se puede borrar entera sin perder
 # nada, porque lo que importa de cada documento ya quedo en el almacen.
@@ -228,13 +231,39 @@ log.info("proveedor de clasificacion: %s", _proveedor()[0])
 # aplicacion entera no arrancaria -- incluida la clasificacion de documentos,
 # que no tiene nada que ver con el almacen. Mejor perder la memoria que perder
 # el programa, y decirlo en el log en vez de fallar en silencio.
+def _persistencia():
+    """APM_PERSISTENCIA=cosmos: el almacen se guarda en las bases apm y tdd2 de
+    Cosmos DB (separadas pero ligadas por el numero de aplicativo)."""
+    if os.environ.get("APM_PERSISTENCIA", "").strip().lower() != "cosmos":
+        return None
+    from ...services.persistencia_cosmos import PersistenciaCosmos
+    return PersistenciaCosmos(
+        os.environ["COSMOS_ENDPOINT"], os.environ.get("COSMOS_KEY", ""),
+        os.environ.get("COSMOS_DB_APM", "apm"),
+        os.environ.get("COSMOS_CONTENEDOR_APM", "habilitadores"),
+        os.environ.get("COSMOS_DB_TDD2", "tdd2"),
+        os.environ.get("COSMOS_CONTENEDOR_TDD2", "documentos"),
+        blob_endpoint=os.environ.get("STORAGE_ENDPOINT", ""))
+
+
 try:
-    BASE = almacen.Almacen(CARPETA_DATOS)
+    BASE = almacen.Almacen(CARPETA_DATOS, _persistencia())
     log.info("almacen: %s", BASE.ruta)
 except Exception as exc:
     BASE = None
     log.error("no se pudo abrir el almacen en %s (%s). La aplicacion sigue, "
               "pero sin memoria entre corridas.", CARPETA_DATOS, exc)
+
+
+# Contenido completo de los TDD Nivel 2 (texto, tablas, diagramas) y base de IA.
+# Lee de Cosmos (tdd2/documentos, tipo "tdd2_contenido") y de Blob; sin Azure
+# puede leer una carpeta local (CONTENIDO_TDD2_DIR). No abre nada al importar.
+from ...services.contenido_tdd2 import ContenidoTdd2
+_PERSISTENCIA_NUBE = getattr(BASE, "_persistencia", None)
+CONTENIDO_TDD2 = ContenidoTdd2(getattr(_PERSISTENCIA_NUBE, "contenedor_tdd2", None))
+if _PERSISTENCIA_NUBE is not None:
+    # cuando se guarda el contenido de un TDD, el visor lo ve de inmediato
+    _PERSISTENCIA_NUBE.al_cambiar_contenido = CONTENIDO_TDD2.invalidar
 
 
 def _base():
@@ -1509,6 +1538,13 @@ def _pantalla(nombre_archivo: str, js_pantalla: str | None,
     return html
 
 
+@router.get("/login", response_class=HTMLResponse)
+def pantalla_login():
+    """Pantalla de inicio de sesión (la única página libre del portal, junto con /assets)."""
+    return HTMLResponse((FRONTEND_DIR / "login.html").read_text(encoding="utf-8"),
+                        headers={"Cache-Control": "no-store"})
+
+
 @router.get("/", response_class=HTMLResponse)
 def pantalla_paso_1():
     return _pantalla("paso-1.html", "paso1.js", paso=1)
@@ -1529,6 +1565,11 @@ def pantalla_conciliar():
 @router.get("/tdd2", response_class=HTMLResponse)
 def pantalla_tdd2():
     return _pantalla("tdd2.html", "tdd2.js")
+
+
+@router.get("/contenido-tdd", response_class=HTMLResponse)
+def pantalla_contenido_tdd():
+    return _pantalla("contenido-tdd.html", "contenido-tdd.js")
 
 
 @router.get("/docs", response_class=HTMLResponse)
@@ -1672,36 +1713,57 @@ def config_probar(payload: dict = Body(...)):
     if not os.getenv("ANTHROPIC_API_KEY"):
         return {"ok": False, "proveedor": "claude",
                 "mensaje": "No hay API key guardada. Pegala arriba y guarda antes de probar."}
-    try:
-        import anthropic
-        workspace = (os.getenv("ANTHROPIC_WORKSPACE_ID") or "").strip()
-        cabeceras = {"anthropic-workspace-id": workspace} if workspace else None
-        cliente = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"),
-                                      default_headers=cabeceras)
-        modelo = (os.getenv("ANTHROPIC_MODEL") or "claude-sonnet-5").strip()
-        cliente.messages.create(model=modelo, max_tokens=8,
-                                messages=[{"role": "user", "content": "ok"}])
+    import anthropic
+    llave = (os.getenv("ANTHROPIC_API_KEY") or "").strip()
+    workspace = (os.getenv("ANTHROPIC_WORKSPACE_ID") or "").strip()
+    modelo = (os.getenv("ANTHROPIC_MODEL") or "claude-sonnet-5").strip()
+
+    def intento(con_workspace: bool):
+        cabeceras = {"anthropic-workspace-id": workspace} if (workspace and con_workspace) else None
+        cliente = anthropic.Anthropic(api_key=llave, default_headers=cabeceras, max_retries=0,
+                                      timeout=30)
+        try:
+            cliente.messages.create(model=modelo, max_tokens=8,
+                                    messages=[{"role": "user", "content": "ok"}])
+            return None
+        except Exception as exc:          # noqa: BLE001
+            return exc
+
+    def resumen(exc) -> str:
+        """Datos NO secretos del error: codigo HTTP, tipo y mensaje de Anthropic."""
+        estado = getattr(exc, "status_code", None)
+        cuerpo = getattr(exc, "body", None)
+        detalle = ""
+        if isinstance(cuerpo, dict):
+            err = cuerpo.get("error") if isinstance(cuerpo.get("error"), dict) else cuerpo
+            detalle = f"{err.get('type', '')}: {err.get('message', '')}".strip(": ")
+        return f"{type(exc).__name__} · HTTP {estado or '—'} · {detalle or str(exc)[:160]}"
+
+    exc = intento(True)
+    if exc is None:
         return {"ok": True, "proveedor": "claude",
                 "mensaje": f"La API respondio correctamente con {modelo}."}
-    except Exception as exc:
-        texto = str(exc)
-        # Traducir los dos errores que de verdad ocurren, en vez de volcar el stack.
-        if "workspace" in texto.lower():
-            ayuda = ("Tu token esta ligado a una identidad de organizacion y la API "
-                     "necesita saber en que workspace actua. Agrega el Workspace ID "
-                     "(console.anthropic.com > Settings > Workspaces, empieza con "
-                     "'wrkspc_') y vuelve a probar.")
-        elif "authentication" in texto.lower() or "401" in texto or "unauthorized" in texto.lower():
-            ayuda = ("La API rechazo la llave. Revisa que este completa y vigente en "
-                     "console.anthropic.com > Settings > API keys.")
-        elif "credit" in texto.lower() or "billing" in texto.lower():
-            ayuda = "La cuenta no tiene credito disponible."
-        elif "not_found" in texto.lower() or "model" in texto.lower():
-            ayuda = f"El modelo no esta disponible para esta cuenta. Prueba con otro."
-        else:
-            ayuda = texto[:300]
-        log.warning("prueba de conexion fallida | %s", type(exc).__name__)
-        return {"ok": False, "proveedor": "claude", "mensaje": ayuda}
+    diagnostico = resumen(exc)
+    # Si hay Workspace ID y fallo, se reintenta SIN el para saber si es el culpable.
+    if workspace:
+        exc2 = intento(False)
+        if exc2 is None:
+            return {"ok": False, "proveedor": "claude",
+                    "mensaje": ("La llave SI funciona sin el Workspace ID: borra el Workspace ID "
+                                "(o corrigelo) y guarda. Con el, la API respondio: " + diagnostico)}
+        diagnostico += " | sin Workspace ID: " + resumen(exc2)
+    texto = diagnostico.lower()
+    log.warning("prueba de conexion fallida | %s", diagnostico[:300])
+    if "credit" in texto or "billing" in texto:
+        ayuda = "La cuenta no tiene credito disponible. " + diagnostico
+    elif "not_found" in texto or "model" in texto:
+        ayuda = f"El modelo {modelo} no esta disponible para esta cuenta. " + diagnostico
+    elif "401" in texto or "authentication" in texto or "unauthorized" in texto:
+        ayuda = ("La API rechazo la llave (revisa que este completa y vigente en "
+                 "console.anthropic.com > Settings > API keys). Detalle: " + diagnostico)
+    else:
+        ayuda = diagnostico
+    return {"ok": False, "proveedor": "claude", "mensaje": ayuda}
 
 
 # ---------------------------------------------------------------------------
@@ -2488,6 +2550,125 @@ def tdd2_referencia():
     tarjetas.sort(key=lambda t: (t["habilitador"] or "").lower())
     return {"ok": True, "total": sum(1 for t in tarjetas if t["tdd2_nombre"]),
             "habilitadores": tarjetas}
+
+
+# ---------------------------------------------------------------------------
+# CONTENIDO COMPLETO DE LOS TDD NIVEL 2 + BASE DE IA
+# ---------------------------------------------------------------------------
+
+_ID_CONTENIDO = r"^tdd2c-[A-Za-z0-9_-]{4,64}$"
+
+
+def _contenido_o_503():
+    if not CONTENIDO_TDD2.disponible():
+        raise HTTPException(503, "El contenido de los TDD Nivel 2 no esta disponible: "
+                                 "hace falta la persistencia en Cosmos (APM_PERSISTENCIA=cosmos) "
+                                 "o CONTENIDO_TDD2_DIR.")
+    return CONTENIDO_TDD2
+
+
+@router.get("/api/tdd2/contenido")
+def tdd2_contenido_lista():
+    """Los TDD Nivel 2 cuyo contenido completo esta guardado, con sus numeros."""
+    c = _contenido_o_503()
+    try:
+        filas = c.listar()
+    except Exception as exc:                       # noqa: BLE001
+        log.exception("contenido TDD2: no se pudo listar")
+        raise HTTPException(502, f"No se pudo leer el contenido ({type(exc).__name__}).")
+    return {"ok": True, "total": len(filas), "documentos": filas, "ia": c.estado_ia()}
+
+
+@router.get("/api/tdd2/contenido/buscar")
+def tdd2_contenido_buscar(q: str = "", id: str = ""):
+    c = _contenido_o_503()
+    if id and not re.match(_ID_CONTENIDO, id):
+        raise HTTPException(400, "Identificador no valido.")
+    return {"ok": True, "resultados": c.buscar(q, k=12, id_doc=id)}
+
+
+@router.post("/api/tdd2/contenido/preguntar")
+def tdd2_contenido_preguntar(payload: dict = Body(...)):
+    """Pregunta sobre el contenido de los TDD: recupera los fragmentos mas
+    cercanos y, si hay llave de Claude, redacta la respuesta con ellos."""
+    c = _contenido_o_503()
+    pregunta = str(payload.get("pregunta") or "").strip()
+    if len(pregunta) < 3:
+        raise HTTPException(400, "Escribe una pregunta.")
+    id_doc = str(payload.get("id") or "")
+    if id_doc and not re.match(_ID_CONTENIDO, id_doc):
+        raise HTTPException(400, "Identificador no valido.")
+    return c.preguntar(pregunta[:1000], id_doc=id_doc)
+
+
+@router.post("/api/tdd2/contenido/recargar")
+def tdd2_contenido_recargar():
+    c = _contenido_o_503()
+    return {"ok": True, "documentos": c.recargar()}
+
+
+@router.get("/api/tdd2/contenido/{id_doc}")
+def tdd2_contenido_uno(id_doc: str):
+    if not re.match(_ID_CONTENIDO, id_doc):
+        raise HTTPException(400, "Identificador no valido.")
+    doc = _contenido_o_503().obtener(id_doc)
+    if doc is None:
+        raise HTTPException(404, "No hay contenido guardado para ese TDD Nivel 2.")
+    # Los campos del TDD Nivel 2 (con su confianza C1-C4) viven en la otra base
+    # ligada: se muestran junto al contenido y los diagramas.
+    campos: list[dict] = []
+    if BASE is not None and doc.get("huella"):
+        try:
+            campos = BASE.campos_tdd2(doc["huella"])
+        except Exception:
+            log.exception("no se pudieron leer los campos del TDD2 %s", id_doc)
+    return {"ok": True, "documento": doc, "campos": campos}
+
+
+@router.get("/api/tdd2/contenido/{id_doc}/imagen/{archivo}")
+def tdd2_contenido_imagen(id_doc: str, archivo: str, mini: int = 0):
+    """La imagen completa, o con `?mini=1` su miniatura (para las galerias)."""
+    if not re.match(_ID_CONTENIDO, id_doc):
+        raise HTTPException(400, "Identificador no valido.")
+    try:
+        c = _contenido_o_503()
+        r = c.miniatura(id_doc, archivo) if mini else c.imagen(id_doc, archivo)
+    except HTTPException:
+        raise
+    except Exception as exc:                       # noqa: BLE001
+        log.warning("imagen TDD2 %s/%s: %s: %s", id_doc, archivo, type(exc).__name__, exc)
+        raise HTTPException(502, "No se pudo leer la imagen desde el almacenamiento "
+                                 "(revisa que la identidad del servidor tenga el rol "
+                                 "Storage Blob Data Reader).")
+    if r is None:
+        raise HTTPException(404, "Imagen no encontrada.")
+    datos, tipo = r
+    return Response(datos, media_type=tipo, headers={"Cache-Control": "private, max-age=3600"})
+
+
+@router.get("/api/tdd2/contenido/{id_doc}/original")
+def tdd2_contenido_original(id_doc: str):
+    """Descarga el .docx original tal como se subio."""
+    from fastapi.responses import StreamingResponse
+    from urllib.parse import quote
+    if not re.match(_ID_CONTENIDO, id_doc):
+        raise HTTPException(400, "Identificador no valido.")
+    try:
+        r = _contenido_o_503().original(id_doc)
+    except HTTPException:
+        raise
+    except Exception as exc:                       # noqa: BLE001
+        log.warning("original TDD2 %s: %s: %s", id_doc, type(exc).__name__, exc)
+        raise HTTPException(502, "No se pudo leer el original desde el almacenamiento.")
+    if r is None:
+        raise HTTPException(404, "El original de este TDD todavia no esta en el almacenamiento.")
+    flujo, nombre, tam = r
+    cab = {"Content-Disposition": f"attachment; filename*=UTF-8''{quote(nombre)}"}
+    if tam:
+        cab["Content-Length"] = str(tam)
+    return StreamingResponse(
+        flujo, headers=cab,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
 
 
 @router.post("/api/tdd2/comparar")

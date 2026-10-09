@@ -15,3 +15,7 @@ anthropic==1.8.0
 google-genai==1.75.0
 python-pptx==1.0.2
 Pillow==12.3.0
+# --- Azure (usuarios en Cosmos DB, identidad administrada) ---
+azure-cosmos==4.17.1
+azure-identity==1.26.0
+azure-storage-blob==12.28.0

@@ -44,13 +44,38 @@ const MENSAJE_SIN_CONEXION = "No se pudo conectar con el portal. Revisa que siga
   + "abierto (o tu conexión a internet) y vuelve a intentarlo. Si el portal está "
   + "publicado en Render, puede tardar cerca de un minuto en despertar.";
 
+/* Un solo login: el de Portal GD 360. Al cerrar o vencer la sesión también se
+   borra la copia del navegador, para que esa pantalla no regrese de inmediato. */
+function _limpiarSesionLocal() {
+  try { localStorage.removeItem("gd_token"); localStorage.removeItem("gd_user"); } catch (e) { /* sin almacenamiento */ }
+}
+
+function irAlLogin() {
+  _limpiarSesionLocal();
+  const interna = location.pathname.replace(/^\/gobierno_de_aplicaciones/, "") || "/";
+  location.replace("/gobierno_de_aplicaciones/login?next=" + encodeURIComponent(interna));
+}
+
 async function fetchPortal(url, opciones) {
+  let r;
   try {
-    return await fetch(url, opciones);
+    r = await fetch(url, opciones);
   } catch (e) {
     throw new Error(MENSAJE_SIN_CONEXION);
   }
+  // Sesión vencida o sin iniciar: se manda al login (la cookie la pone el servidor).
+  if (r.status === 401 && !location.pathname.endsWith("/login")) irAlLogin();
+  return r;
 }
+
+document.addEventListener("click", async (ev) => {
+  const salir = ev.target.closest && ev.target.closest("#btn-salir");
+  if (!salir) return;
+  ev.preventDefault();
+  try { await fetch("/api/v1/auth/logout", { method: "POST", credentials: "same-origin" }); } catch (e) { /* igual se sale */ }
+  _limpiarSesionLocal();
+  location.replace("/gobierno_de_aplicaciones/login");
+});
 
 function _fechaLegible(iso) {
   if (!iso) return "";

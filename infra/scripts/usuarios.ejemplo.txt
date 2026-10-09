@@ -1,0 +1,3 @@
+# Un correo por línea (los repetidos se ignoran). Copia este archivo como usuarios.txt (está en .gitignore).
+usuario1@dominio.com
+usuario2@dominio.com

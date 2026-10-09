@@ -58,16 +58,23 @@
           <button class="btn btn-gd w-100 py-2" id="btnLogin" type="submit">Ingresar</button>
         </form>
 
-        <div class="gd-panel mt-4 small" id="demoBox">
-          <div class="fw-600 mb-2"><i class="bi bi-info-circle text-primary me-1"></i>Usuarios de prueba (fase MVP)</div>
-          <table class="table table-sm mb-0 align-middle">
-            <tbody>
-              <tr><td>gd.admin</td><td>GobDatos2026!</td><td class="text-muted-gd">Datos · admin</td></tr>
-              <tr><td>gi.editor</td><td>GobInteg2026!</td><td class="text-muted-gd">Integración</td></tr>
-              <tr><td>ga.editor</td><td>GobApps2026!</td><td class="text-muted-gd">Aplicaciones</td></tr>
-            </tbody>
-          </table>
-        </div>
+        <form id="cambioForm" novalidate hidden>
+          <div class="alert alert-info py-2 small">Tu contraseña es temporal. Elige una nueva para continuar (mínimo 12 caracteres, con mayúscula, minúscula y número).</div>
+          <div class="mb-3">
+            <label class="form-label" for="pwNueva">Contraseña nueva <span class="req">*</span></label>
+            <input class="form-control" id="pwNueva" type="password" autocomplete="new-password" minlength="12" required>
+          </div>
+          <div class="mb-4">
+            <label class="form-label" for="pwRepetir">Repite la contraseña nueva <span class="req">*</span></label>
+            <input class="form-control" id="pwRepetir" type="password" autocomplete="new-password" minlength="12" required>
+          </div>
+          <button class="btn btn-gd w-100 py-2" id="btnCambio" type="submit">Guardar y entrar</button>
+        </form>
+
+        <p class="small text-muted-gd mt-4 mb-0" id="demoBox" hidden>
+          <i class="bi bi-info-circle text-primary me-1"></i>Modo demostración (sin servidor): entra con
+          <b>demo.datos</b>, <b>demo.integracion</b> o <b>demo.aplicaciones</b> y cualquier contraseña.
+        </p>
       </div>
     </section>
   </main>

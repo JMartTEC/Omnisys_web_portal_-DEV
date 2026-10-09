@@ -5,6 +5,8 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 
+from .conftest import PASSWORDS
+
 
 @pytest.fixture(scope="module")
 def client():
@@ -12,8 +14,12 @@ def client():
         yield c
 
 
-def token(client, user="gd.admin", pw="GobDatos2026!"):
-    r = client.post("/api/v1/auth/login", json={"username": user, "password": pw})
+ADMIN = "admin@prueba.mx"
+EDITOR_INTEG = "editor.integracion@prueba.mx"
+
+
+def token(client, user=ADMIN):
+    r = client.post("/api/v1/auth/login", json={"username": user, "password": PASSWORDS[user]})
     assert r.status_code == 200, r.text
     return {"Authorization": "Bearer " + r.json()["access_token"]}
 
@@ -24,7 +30,7 @@ def test_health(client):
 
 
 def test_login_invalido(client):
-    assert client.post("/api/v1/auth/login", json={"username": "gd.admin", "password": "x"}).status_code == 401
+    assert client.post("/api/v1/auth/login", json={"username": ADMIN, "password": "x"}).status_code == 401
 
 
 def test_requiere_token(client):
@@ -55,7 +61,7 @@ def test_query_con_fuentes(client):
 
 
 def test_ingesta_y_consulta(client):
-    h = token(client, "gi.editor", "GobInteg2026!")
+    h = token(client, EDITOR_INTEG)
     contenido = ("Integración INT-042: Pulsar publica el evento de credencialización hacia Cypherlearning "
                  "mediante API REST cada vez que MDM confirma la identidad.").encode()
     r = client.post("/api/v1/ingesta/documentos", headers=h,
@@ -74,7 +80,7 @@ def test_ingesta_y_consulta(client):
 
 
 def test_editor_no_carga_en_otro_gobierno(client):
-    h = token(client, "gi.editor", "GobInteg2026!")
+    h = token(client, EDITOR_INTEG)
     r = client.post("/api/v1/ingesta/documentos", headers=h,
                     data={"gobierno": "datos", "dominio": "persona"},
                     files={"archivo": ("x.txt", b"hola mundo de datos", "text/plain")})
@@ -89,7 +95,7 @@ def test_formato_no_soportado(client):
 
 
 def test_configurar_agente_remoto(client):
-    h = token(client, "ga.editor", "GobApps2026!")
+    h = token(client, "editor.apps@prueba.mx")
     r = client.put("/api/v1/gobiernos/aplicaciones/agente", headers=h, json={"modo": "remoto", "url": "https://ga-agent.example.com/"})
     assert r.status_code == 200 and r.json()["url"] == "https://ga-agent.example.com"
     assert client.put("/api/v1/gobiernos/datos/agente", headers=h, json={"modo": "local"}).status_code == 403

@@ -20,6 +20,7 @@
         <a class="sello sello-boton" id="btn-inicio" href="/gobierno_de_aplicaciones/">Inicio</a>
         <a class="sello sello-boton" id="btn-conciliar" href="/gobierno_de_aplicaciones/conciliar">Comparar APM</a>
         <a class="sello sello-boton" id="btn-tdd2" href="/gobierno_de_aplicaciones/tdd2">Comparar TDD Nivel 2</a>
+        <a class="sello sello-boton" id="btn-contenido" href="/gobierno_de_aplicaciones/contenido-tdd">Contenido TDD Nivel 2</a>
         <a class="sello sello-boton" id="sello-docs" href="/gobierno_de_aplicaciones/docs" hidden></a>
         <a class="sello sello-boton" id="btn-config" href="/gobierno_de_aplicaciones/config">Configuración API key</a>
       </div>
@@ -27,6 +28,7 @@
         <a class="volver-gd" id="btn-manual" href="/gobierno_de_aplicaciones/assets/manual/Manual_de_usuario_Portal_APM_TEC.pdf"
            target="_blank" rel="noopener" title="Abre el manual de usuario en una pestaña nueva">Manual de usuario</a>
         <a class="volver-gd" href="/" title="Regresar al Portal GD 360">Portal GD 360</a>
+        <a class="volver-gd" id="btn-salir" href="#" title="Cerrar tu sesión">Cerrar sesión</a>
       </div>
     </div>
   </nav>
@@ -68,6 +70,7 @@
     var p = location.pathname, id = "btn-inicio";
     if (p.indexOf("/gobierno_de_aplicaciones/conciliar") === 0) id = "btn-conciliar";
     else if (p.indexOf("/gobierno_de_aplicaciones/tdd2") === 0) id = "btn-tdd2";
+    else if (p.indexOf("/gobierno_de_aplicaciones/contenido-tdd") === 0) id = "btn-contenido";
     else if (p.indexOf("/gobierno_de_aplicaciones/docs") === 0) id = "sello-docs";
     else if (p.indexOf("/gobierno_de_aplicaciones/config") === 0) id = "btn-config";
     var el = document.getElementById(id);

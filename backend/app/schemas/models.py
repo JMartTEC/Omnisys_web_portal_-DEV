@@ -11,11 +11,29 @@ class Usuario(BaseModel):
     nombre: str
     gobierno: str
     rol: Literal["admin", "editor", "lector"]
+    debe_cambiar_password: bool = False
 
 
 class LoginRequest(BaseModel):
     username: str
     password: str
+
+
+class CambiarPasswordRequest(BaseModel):
+    password_actual: str
+    password_nueva: str
+
+
+class NuevoUsuarioRequest(BaseModel):
+    username: str
+    nombre: str
+    gobierno: str = "aplicaciones"
+    rol: Literal["admin", "editor", "lector"] = "editor"
+
+
+class UsuarioCreado(BaseModel):
+    usuario: Usuario
+    password_temporal: str  # se muestra una sola vez
 
 
 class LoginResponse(BaseModel):

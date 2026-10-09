@@ -23,17 +23,18 @@
   }
 
   // ------------------------------------------------------------------ MOCK
-  // Usuarios hardcodeados (mismos que backend/app/core/security.py). SOLO para esta fase.
+  // Modo demostración (sin backend): usuarios de muestra SIN contraseña real; acepta cualquiera.
+  // Los usuarios reales viven cifrados en la base de seguridad del servidor.
   const MOCK_USERS = [
-    { username: "gd.admin", password: "GobDatos2026!", nombre: "Administrador GD", gobierno: "datos", rol: "admin" },
-    { username: "gi.editor", password: "GobInteg2026!", nombre: "Editor Integración", gobierno: "integracion", rol: "editor" },
-    { username: "ga.editor", password: "GobApps2026!", nombre: "Editor Aplicaciones", gobierno: "aplicaciones", rol: "editor" }
+    { username: "demo.datos", nombre: "Demo Datos", gobierno: "datos", rol: "admin" },
+    { username: "demo.integracion", nombre: "Demo Integración", gobierno: "integracion", rol: "editor" },
+    { username: "demo.aplicaciones", nombre: "Demo Aplicaciones", gobierno: "aplicaciones", rol: "editor" }
   ];
   const DB = () => window.GD_MOCK_DATA;
   let mockDocs = [
-    { id: "doc-001", nombre: "Rector_Dominio_Persona_APROBADO.docx", gobierno: "datos", dominio: "persona", clasificacion: "Confidencial", estado: "indexado", fragmentos: 142, tamano_kb: 812, cargado_por: "gd.admin", fecha: "2026-09-18T10:12:00" },
-    { id: "doc-002", nombre: "E02_Diccionario_Persona_V05.3.xlsx", gobierno: "datos", dominio: "persona", clasificacion: "Confidencial", estado: "indexado", fragmentos: 96, tamano_kb: 245, cargado_por: "gd.admin", fecha: "2026-09-18T10:15:00" },
-    { id: "doc-003", nombre: "DEDIND001_Inventario_Integraciones_v9.xlsx", gobierno: "integracion", dominio: "inventario-integraciones", clasificacion: "Interna", estado: "procesando", fragmentos: 0, tamano_kb: 530, cargado_por: "gi.editor", fecha: "2026-09-24T17:40:00" }
+    { id: "doc-001", nombre: "Rector_Dominio_Persona_APROBADO.docx", gobierno: "datos", dominio: "persona", clasificacion: "Confidencial", estado: "indexado", fragmentos: 142, tamano_kb: 812, cargado_por: "demo.datos", fecha: "2026-09-18T10:12:00" },
+    { id: "doc-002", nombre: "E02_Diccionario_Persona_V05.3.xlsx", gobierno: "datos", dominio: "persona", clasificacion: "Confidencial", estado: "indexado", fragmentos: 96, tamano_kb: 245, cargado_por: "demo.datos", fecha: "2026-09-18T10:15:00" },
+    { id: "doc-003", nombre: "DEDIND001_Inventario_Integraciones_v9.xlsx", gobierno: "integracion", dominio: "inventario-integraciones", clasificacion: "Interna", estado: "procesando", fragmentos: 0, tamano_kb: 530, cargado_por: "demo.integracion", fecha: "2026-09-24T17:40:00" }
   ];
 
   function tokenize(t) {
@@ -82,9 +83,9 @@
   const mock = {
     async login(username, password) {
       await sleep(400);
-      const u = MOCK_USERS.find((x) => x.username === username && x.password === password);
-      if (!u) throw new Error("Usuario o contraseña incorrectos");
-      const { password: _, ...user } = u;
+      const u = MOCK_USERS.find((x) => x.username === username);
+      if (!u || !password) throw new Error("Usuario o contraseña incorrectos");
+      const user = { ...u };
       return { access_token: "mock." + btoa(username) + "." + Date.now(), token_type: "bearer", user };
     },
     async gobiernos() { await sleep(150); return DB().gobiernos.map(conStats); },

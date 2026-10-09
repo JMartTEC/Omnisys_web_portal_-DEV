@@ -14,11 +14,12 @@ from fastapi.responses import RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.routes import router
-from app.core.config import get_settings
+from app.core.config import get_settings, leer_version
 from app.services.rag.engine import RagEngine
 # Gobierno de Aplicaciones: el Portal APM TEC es su propia app FastAPI y se monta
 # en /gobierno_de_aplicaciones (backend en app/gobierno_de_aplicaciones/, pantallas
 # en frontend/gobierno_de_aplicaciones/).
+from app.core.proteccion import ProteccionAPM, SoloDesdeGateway
 from app.gobierno_de_aplicaciones.main import app as apm_app
 
 PREFIJO_APM = "/gobierno_de_aplicaciones"
@@ -40,8 +41,9 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     s = get_settings()
-    app = FastAPI(title=s.APP_NAME, version="0.1.0", lifespan=lifespan,
+    app = FastAPI(title=s.APP_NAME, version=leer_version(), lifespan=lifespan,
                   description="API del portal de Gobierno de Datos VPAF: catálogo certificado, agentes RAG por gobierno e ingesta.")
+    app.add_middleware(SoloDesdeGateway)
     app.add_middleware(CORSMiddleware, allow_origins=s.cors_list, allow_credentials=False,
                        allow_methods=["*"], allow_headers=["*"])
     app.include_router(router, prefix=s.API_PREFIX)
@@ -51,6 +53,8 @@ def create_app() -> FastAPI:
     def apm_sin_diagonal():
         return RedirectResponse(PREFIJO_APM + "/")
 
+    # Todo el Portal APM exige sesión (excepto su pantalla de login y /assets).
+    apm_app.add_middleware(ProteccionAPM)
     app.mount(PREFIJO_APM, apm_app, name="gobierno_de_aplicaciones")
 
     if SERVIR_FRONTEND and FRONTEND_DIR.is_dir():

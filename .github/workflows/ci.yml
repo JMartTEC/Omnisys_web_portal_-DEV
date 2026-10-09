@@ -1,0 +1,53 @@
+# Integración continua: valida el código ANTES de llegar a un ambiente.
+# Corre en cada pull request y en cada push a ramas de trabajo (las ramas de ambiente
+# develop / int / release / main las valida desplegar.yml, que incluye estas mismas pruebas).
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [develop, int, release, main]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Pruebas del backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - name: Instalar dependencias
+        run: pip install -r backend/requirements.txt -r backend/requirements-dev.txt
+      - name: Pruebas (pytest)
+        working-directory: backend
+        run: python -m pytest -q
+
+  frontend:
+    name: Sintaxis del frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Revisar todos los .js
+        run: |
+          fallos=0
+          while IFS= read -r f; do
+            node --check "$f" || fallos=1
+          done < <(find frontend -name '*.js' -not -path '*/node_modules/*')
+          exit $fallos
+
+  infraestructura:
+    name: Validar Bicep
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compilar plantilla (detecta errores de sintaxis)
+        run: az bicep build --file infra/main.bicep --stdout > /dev/null

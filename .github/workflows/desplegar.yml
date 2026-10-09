@@ -1,0 +1,177 @@
+# Despliegue por ambiente.
+#   develop -> dev   |   int -> int   |   release -> qa   |   main -> pro
+# También se puede lanzar a mano (Actions > Desplegar > Run workflow) eligiendo el ambiente.
+#
+# Todo lo variable vive en GitHub Environments (Settings > Environments), uno por ambiente:
+#   Variables: AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID, OPERADOR_OBJECT_ID
+#   Secretos : JWT_SECRET_NUEVO, LLAVE_GATEWAY_NUEVA   (los genera infra/scripts/configurar-identidad-pipeline.sh)
+# El acceso a Azure es por identidad federada (OIDC): no hay contraseñas ni llaves de Azure en GitHub.
+# En qa y pro el Environment exige aprobación de un revisor antes de correr.
+name: Desplegar
+
+on:
+  push:
+    branches: [develop, int, release, main]
+  workflow_dispatch:
+    inputs:
+      ambiente:
+        description: Ambiente destino
+        type: choice
+        options: [dev, int, qa, pro]
+        required: true
+      omitir_infra:
+        description: No tocar la infraestructura (solo publicar código)
+        type: boolean
+        default: false
+
+concurrency:
+  group: desplegar-${{ github.event.inputs.ambiente || github.ref_name }}
+  cancel-in-progress: false
+
+permissions:
+  id-token: write   # OIDC hacia Azure
+  contents: read
+
+jobs:
+  ambiente:
+    name: Elegir ambiente
+    runs-on: ubuntu-latest
+    outputs:
+      nombre: ${{ steps.elegir.outputs.nombre }}
+    steps:
+      - id: elegir
+        env:
+          MANUAL: ${{ github.event.inputs.ambiente }}
+          RAMA: ${{ github.ref_name }}
+        run: |
+          if [ -n "$MANUAL" ]; then amb="$MANUAL"; else
+            case "$RAMA" in
+              develop) amb=dev ;;
+              int) amb=int ;;
+              release) amb=qa ;;
+              main) amb=pro ;;
+              *) echo "Rama sin ambiente: $RAMA" >&2; exit 1 ;;
+            esac
+          fi
+          echo "nombre=$amb" >> "$GITHUB_OUTPUT"
+          echo "Ambiente: $amb" >> "$GITHUB_STEP_SUMMARY"
+
+  pruebas:
+    name: Pruebas
+    needs: ambiente
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - run: pip install -r backend/requirements.txt -r backend/requirements-dev.txt
+      - name: pytest
+        working-directory: backend
+        run: python -m pytest -q
+
+  desplegar:
+    name: Desplegar a ${{ needs.ambiente.outputs.nombre }}
+    needs: [ambiente, pruebas]
+    runs-on: ubuntu-latest
+    environment: ${{ needs.ambiente.outputs.nombre }}   # aquí se piden las aprobaciones (qa, pro)
+    env:
+      AMB: ${{ needs.ambiente.outputs.nombre }}
+      GRUPO: rg-aptec-${{ needs.ambiente.outputs.nombre }}
+      OPERADOR_OBJECT_ID: ${{ vars.OPERADOR_OBJECT_ID }}
+      JWT_SECRET_NUEVO: ${{ secrets.JWT_SECRET_NUEVO }}
+      LLAVE_GATEWAY_NUEVA: ${{ secrets.LLAVE_GATEWAY_NUEVA }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Entrar a Azure (identidad federada)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Infraestructura (Bicep)
+        id: infra
+        env:
+          OMITIR: ${{ github.event.inputs.omitir_infra }}
+        run: |
+          if [ "$OMITIR" = "true" ]; then
+            echo "Infraestructura omitida; se leen las salidas del último despliegue."
+            salidas=$(az deployment group show -g "$GRUPO" -n "infra-$AMB" --query properties.outputs -o json)
+          else
+            salidas=$(az deployment group create -g "$GRUPO" -n "infra-$AMB" \
+              --template-file infra/main.bicep --parameters "infra/parametros/$AMB.bicepparam" \
+              --query properties.outputs -o json)
+          fi
+          val() { echo "$salidas" | python3 -c "import sys,json; print(json.load(sys.stdin)['$1']['value'])"; }
+          {
+            echo "backend=$(val nombreBackend)"
+            echo "front=$(val nombreFront)"
+            echo "url_gateway=$(val urlGateway)"
+            echo "url_backend=$(val urlBackendDirecta)"
+            echo "url_front=$(val urlFront)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Empaquetar backend
+        run: |
+          mkdir -p paquete
+          cp backend/requirements.txt paquete/requirements.txt
+          rsync -a --exclude 'venv' --exclude '__pycache__' --exclude 'tests' --exclude 'datos_locales' \
+            --exclude '.env' backend/ paquete/backend/
+          rsync -a frontend/ paquete/frontend/
+          (cd paquete && zip -qr ../backend.zip .)
+
+      - name: Publicar backend (App Service)
+        run: |
+          az webapp deploy -g "$GRUPO" -n "${{ steps.infra.outputs.backend }}" \
+            --src-path backend.zip --type zip --clean true --timeout 600000
+
+      - name: Generar env.js del frontend (apunta al gateway)
+        env:
+          API_BASE_URL: ${{ steps.infra.outputs.url_gateway }}
+          USE_MOCK: 'false'
+          ENV_NAME: ${{ needs.ambiente.outputs.nombre }}
+        run: sh frontend/scripts/render-build.sh
+
+      - name: Token de despliegue del frontend
+        id: swa
+        run: |
+          token=$(az staticwebapp secrets list -g "$GRUPO" -n "${{ steps.infra.outputs.front }}" \
+            --query properties.apiKey -o tsv)
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+
+      - name: Publicar frontend (Static Web Apps)
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ steps.swa.outputs.token }}
+          action: upload
+          app_location: frontend
+          skip_app_build: true
+
+      - name: Prueba de humo
+        env:
+          GATEWAY: ${{ steps.infra.outputs.url_gateway }}
+          BACKEND: ${{ steps.infra.outputs.url_backend }}
+          FRONT: ${{ steps.infra.outputs.url_front }}
+        run: |
+          espera() { # url, código esperado
+            for i in $(seq 1 30); do
+              c=$(curl -s -o /dev/null -w '%{http_code}' "$1" || true)
+              [ "$c" = "$2" ] && { echo "OK $2 $1"; return 0; }
+              sleep 10
+            done
+            echo "FALLO: $1 devolvió $c, se esperaba $2" >&2; return 1
+          }
+          espera "$GATEWAY/api/v1/health" 200            # gateway -> backend
+          espera "$BACKEND/api/v1/auth/me" 403           # directo al backend sin llave: rechazado
+          espera "$FRONT" 200                            # frontend
+          {
+            echo "### $AMB desplegado"
+            echo "- Gateway: $GATEWAY"
+            echo "- Backend: $BACKEND"
+            echo "- Front: $FRONT"
+          } >> "$GITHUB_STEP_SUMMARY"

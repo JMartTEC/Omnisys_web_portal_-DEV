@@ -1,0 +1,67 @@
+<style>
+  .ct-grid { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; }
+  @media (max-width: 860px) { .ct-grid { grid-template-columns: 1fr; } }
+  .ct-lista { max-height: 72vh; overflow: auto; border: 1px solid var(--linea); border-radius: var(--radio); background: #fff; }
+  .ct-item { display: block; width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--linea);
+             padding: 10px 12px; cursor: pointer; font: inherit; color: var(--tinta); }
+  .ct-item:hover { background: var(--azul-claro); }
+  .ct-item.activo { background: var(--azul-claro); border-left: 4px solid var(--azul); padding-left: 8px; }
+  .ct-item b { display: block; font-size: 13.5px; }
+  .ct-item span { font-size: 11.5px; color: var(--gris); }
+  .ct-doc { background: #fff; border: 1px solid var(--linea); border-radius: var(--radio); padding: 20px 24px; min-height: 240px; }
+  .ct-doc h1.ct-nombre { margin: 0 0 4px; font-size: 20px; }
+  .ct-doc h3.ct-t1 { margin: 26px 0 8px; font-size: 17px; color: var(--azul-osc); border-bottom: 2px solid var(--azul-claro); padding-bottom: 4px; }
+  .ct-doc h4.ct-t2 { margin: 18px 0 6px; font-size: 14.5px; color: var(--tinta); }
+  .ct-doc p.ct-p { margin: 8px 0; line-height: 1.5; white-space: pre-wrap; }
+  .ct-tabla { border-collapse: collapse; width: 100%; margin: 10px 0 14px; font-size: 13px; }
+  .ct-tabla th, .ct-tabla td { border: 1px solid var(--linea); padding: 6px 9px; vertical-align: top; text-align: left; white-space: pre-wrap; }
+  .ct-tabla th { background: var(--azul-claro); color: var(--azul-osc); }
+  .ct-tabla-caja { overflow-x: auto; }
+  .ct-img { margin: 12px 0; text-align: center; }
+  .ct-img img { max-width: 100%; border: 1px solid var(--linea); border-radius: 6px; background: #fff; cursor: zoom-in; }
+  .ct-img figcaption { font-size: 12px; color: var(--gris); margin-top: 4px; text-align: left; }
+  .ct-meta { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 12.5px; color: var(--gris); margin: 4px 0 10px; }
+  .ct-acciones { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 4px; }
+  .ct-resp { background: var(--azul-claro); border-radius: var(--radio); padding: 12px 16px; margin-top: 12px; white-space: pre-wrap; line-height: 1.5; }
+  .ct-fuente { border-left: 3px solid var(--azul); padding: 4px 10px; margin: 8px 0; font-size: 12.5px; background: #fff; }
+  .ct-fuente b { color: var(--azul-osc); }
+  .ct-fuente a { cursor: pointer; color: var(--azul); text-decoration: underline; }
+  .ct-fila-pregunta { display: flex; gap: 8px; }
+  .ct-fila-pregunta input { flex: 1; }
+  .ct-zoom { position: fixed; inset: 0; background: rgba(7,26,63,.85); display: flex; align-items: center; justify-content: center; z-index: 50; cursor: zoom-out; }
+  .ct-zoom img { max-width: 94vw; max-height: 94vh; background: #fff; }
+</style>
+
+<section class="bloque pantalla-config" id="panel-contenido">
+  <div class="config-encabezado">
+    <div>
+      <h2>Contenido de los TDD Nivel 2</h2>
+      <p class="nota">Aquí se ve el contenido completo de cada TDD Nivel 2 guardado en la
+         base de datos: textos, tablas y diagramas, en el orden del documento. Cada TDD está
+         ligado a su aplicativo del APM. Abajo puedes hacerle preguntas al conjunto de TDD.</p>
+    </div>
+    <span class="sello" id="ct-sello-ia" hidden></span>
+  </div>
+  <p class="error" id="ct-error" role="alert" aria-live="polite" hidden></p>
+
+  <h3>Preguntar a los TDD</h3>
+  <div class="ct-fila-pregunta">
+    <input type="text" id="ct-pregunta" spellcheck="false" maxlength="500"
+           placeholder="Ej.: ¿qué base de datos usa PASE?  ·  ¿con qué sistemas se integra VTEX?">
+    <button class="btn" id="ct-btn-preguntar" type="button">Preguntar</button>
+  </div>
+  <p class="nota" id="ct-nota-ia"></p>
+  <div id="ct-respuesta" hidden></div>
+
+  <h3>Documentos</h3>
+  <div class="ct-grid">
+    <div>
+      <input type="text" id="ct-filtro" spellcheck="false" placeholder="Filtrar por nombre, aplicativo o número…">
+      <p class="nota" id="ct-total">Cargando…</p>
+      <div class="ct-lista" id="ct-lista"></div>
+    </div>
+    <article class="ct-doc" id="ct-doc">
+      <p class="nota">Elige un TDD de la lista para ver su contenido.</p>
+    </article>
+  </div>
+</section>

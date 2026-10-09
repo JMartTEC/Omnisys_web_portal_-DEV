@@ -42,11 +42,15 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import logging
 import shutil
 import sqlite3
+import threading
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
+
+log = logging.getLogger("apm.almacen")
 
 NOMBRE_ARCHIVO = "almacen.db"
 VERSION_ESQUEMA = 2
@@ -225,23 +229,70 @@ class Almacen:
     """Toda la persistencia del proyecto pasa por aqui. Ver la nota del modulo
     sobre por que: es la costura por donde esto se vuelve una API."""
 
-    def __init__(self, carpeta: str | Path):
+    def __init__(self, carpeta: str | Path, persistencia=None):
+        """`persistencia` (opcional): un `PersistenciaCosmos`. Con ella, Cosmos es
+        la fuente durable: al abrir se arma la base local desde la nube (o, si
+        la nube esta vacia, se sube lo que haya local) y cada cambio se copia
+        a la nube. Sin ella, todo sigue siendo un archivo SQLite como antes."""
         self.ruta = Path(carpeta) / NOMBRE_ARCHIVO
         self.ruta.parent.mkdir(parents=True, exist_ok=True)
+        self._persistencia = persistencia
+        self._temporizador = None
+        self._candado = threading.Lock()
+        self._sincronizando = False
         with self._con() as con:
             con.executescript(ESQUEMA)
             con.execute("INSERT OR REPLACE INTO meta VALUES (?,?)",
                         ("version_esquema", str(VERSION_ESQUEMA)))
+        if persistencia is not None:
+            self._arrancar_con_nube()
+
+    def _arrancar_con_nube(self) -> None:
+        self._sincronizando = True
+        try:
+            with self._con() as con:
+                if self._persistencia.hay_datos():
+                    r = self._persistencia.hidratar(con)
+                    log.info("almacen: base local armada desde Cosmos %s", r)
+                else:
+                    log.info("almacen: Cosmos vacio; se sube lo que hay local")
+                    self._persistencia.volcar(con)
+        finally:
+            self._sincronizando = False
+
+    def _programar_volcado(self) -> None:
+        """Junta varias escrituras seguidas en un solo volcado a Cosmos."""
+        with self._candado:
+            if self._temporizador is not None:
+                self._temporizador.cancel()
+            self._temporizador = threading.Timer(3.0, self._volcar)
+            self._temporizador.daemon = True
+            self._temporizador.start()
+
+    def _volcar(self) -> None:
+        try:
+            con = sqlite3.connect(self.ruta, timeout=15)
+            con.row_factory = sqlite3.Row
+            try:
+                self._persistencia.volcar(con)
+            finally:
+                con.close()
+        except Exception:  # noqa: BLE001 - la nube no debe tumbar la aplicacion
+            log.exception("no se pudo guardar el almacen en Cosmos")
 
     @contextmanager
     def _con(self):
         con = sqlite3.connect(self.ruta, timeout=15)
         con.row_factory = sqlite3.Row
+        cambios = 0
         try:
             yield con
             con.commit()
+            cambios = con.total_changes
         finally:
             con.close()
+        if cambios and self._persistencia is not None and not self._sincronizando:
+            self._programar_volcado()
 
     # ------------------------------------------------------------------
     # 1. Sembrar la linea base
@@ -322,7 +373,22 @@ class Almacen:
                 "INSERT OR REPLACE INTO base_tdd2_campos VALUES (?,?,?,?,?,?,?)",
                 [(huella, c.llave, c.seccion, c.seccion_titulo, c.campo,
                   c.valor, c.confianza) for c in doc.campos])
+        # El contenido completo (texto, tablas, diagramas) tambien se guarda en
+        # la nube, en segundo plano: ahi es donde se consulta y se le pregunta.
+        guardar = getattr(self._persistencia, "guardar_contenido_async", None)
+        if guardar is not None and not self._sincronizando:
+            try:
+                guardar(ruta, huella, numero or "", doc.id_habilitador)
+            except Exception:  # noqa: BLE001 - el contenido en la nube es un extra
+                log.exception("no se pudo encolar el contenido del TDD2 #%s", numero)
         return huella
+
+    def campos_tdd2(self, huella: str) -> list[dict]:
+        """Todos los campos de un TDD Nivel 2 sembrado, con su confianza C1-C4."""
+        with self._con() as con:
+            return [dict(r) for r in con.execute(
+                "SELECT llave, seccion, seccion_titulo, campo, valor, confianza "
+                "FROM base_tdd2_campos WHERE huella = ? ORDER BY rowid", (huella,))]
 
     def tdd2_de(self, numero: str) -> list[dict]:
         """Los TDD Nivel 2 ya sembrados de un aplicativo, mas reciente primero."""

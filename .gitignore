@@ -12,3 +12,11 @@ dist/
 backend/app/gobierno_de_aplicaciones/datos/
 backend/_subidos/
 *.log
+
+# Usuarios locales (hashes de contraseñas): nunca van a git
+backend/datos_locales/
+
+# Lista real de usuarios (no se sube)
+infra/scripts/usuarios.txt
+usuarios.txt
+.tmp_azure/

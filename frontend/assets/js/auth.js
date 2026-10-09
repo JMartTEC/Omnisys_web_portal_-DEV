@@ -13,8 +13,16 @@
       S.set(C.USER_KEY, JSON.stringify(r.user));
       return r.user;
     },
-    logout(expired) {
+    guardar(r) {
+      S.set(C.TOKEN_KEY, r.access_token);
+      S.set(C.USER_KEY, JSON.stringify(r.user));
+      return r.user;
+    },
+    logout(expired, sinRedireccion) {
       S.del(C.TOKEN_KEY); S.del(C.USER_KEY);
+      // También cierra la cookie de sesión del Portal APM (mismo origen).
+      try { if (!C.USE_MOCK) fetch(C.API_BASE_URL + C.API_PREFIX + "/auth/logout", { method: "POST", credentials: "same-origin", keepalive: true }); } catch (e) { /* igual se sale */ }
+      if (sinRedireccion) return;
       window.location.href = "index.html" + (expired ? "?expirada=1" : "");
     },
     // Llamar al inicio de cada página protegida

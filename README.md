@@ -63,17 +63,18 @@ gd-portal/
     └── .env.example
 ```
 
-## 2. Usuarios de prueba (hardcodeados)
+## 2. Usuarios y login
 
-Están definidos en `backend/app/core/security.py` y en `frontend/assets/js/api.js` (modo MOCK).
+No hay usuarios ni contraseñas en el código. Los usuarios viven **cifrados** (scrypt con sal) en la base
+`seguridad` de Azure Cosmos DB (`AUTH_BACKEND=cosmos`) o, solo para trabajar en la compu, en un archivo local
+fuera de git (`AUTH_BACKEND=archivo`, `backend/datos_locales/usuarios.json`).
 
-| Usuario | Contraseña | Gobierno | Rol |
-|---|---|---|---|
-| gd.admin | GobDatos2026! | Datos | admin (puede cargar en cualquier gobierno) |
-| gi.editor | GobInteg2026! | Integración | editor |
-| ga.editor | GobApps2026! | Aplicaciones | editor |
-
-> En la fase 2 se reemplazan por el IdP institucional (NAM / eDirectory con OIDC). El frontend no cambia porque sigue recibiendo un Bearer token.
+- Hay un único administrador; los demás son usuarios normales (`editor`).
+- Las contraseñas iniciales son **temporales**: al primer ingreso el portal obliga a cambiarlas.
+- Se dan de alta con `python backend/tools/provision_usuarios.py` (ver el manual de la etapa de seguridad).
+- Tras 5 intentos fallidos el usuario se bloquea 15 minutos.
+- Todo el Portal APM TEC exige sesión (cookie HttpOnly); las pantallas sin sesión redirigen al login.
+- En la fase 2 se puede cambiar por Microsoft Entra ID sin tocar el frontend (sigue recibiendo un Bearer token).
 
 ## 3. Ejecutar en local
 
